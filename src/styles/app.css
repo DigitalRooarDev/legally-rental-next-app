@@ -1,0 +1,4481 @@
+/**
+ * App-level additions on top of the handover design CSS.
+ *
+ * `icon.css` / `style.css` are treated as vendor files (regenerated from `html/`
+ * via `npm run sync:design`) — every React-specific tweak lives here instead so
+ * a design re-sync never wipes it.
+ */
+
+body {
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+}
+
+/* --- Native element resets for markup converted from <div> to button/link --- */
+.menu-icon,
+.product-card-whishlist {
+  padding: 0;
+  background-color: transparent;
+  border: none;
+}
+
+.product-card-whishlist {
+  background-color: #fff;
+}
+
+.back-to-top > span {
+  transition: all 0.3s ease-in-out;
+}
+
+/* --- Card link: title anchor stretched over the whole card (Bootstrap .stretched-link) --- */
+.product-card {
+  position: relative;
+}
+
+.product-card-link,
+.product-card-link:hover,
+.product-card-link:focus {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Must outrank the stretched-link overlay (z-index: 1) to stay clickable. */
+.product-card-whishlist {
+  z-index: 2;
+}
+
+.product-card-link:focus-visible::after {
+  outline: 2px solid #8121cf;
+  outline-offset: 2px;
+  border-radius: 30px;
+}
+
+.product-nav .product-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.form-input-section-sticky {
+  cursor: pointer;
+}
+
+/* --- Header: hero on the home page, compact bar everywhere else ---------------
+ *
+ * The handover CSS gives `.header-main` a hard `height: 300px`, because the hero
+ * `.banner-section` inside it is absolutely positioned and the header is what
+ * reserves its space. Inner pages have no hero, so that 300px became a block of
+ * empty gradient.
+ *
+ * `.full-header` marks the pages that keep the tall hero; everything below
+ * matches `.header-main:not(.full-header)`. The class is set server-side by
+ * `<HeaderShell>` from the route, so it is right in the first paint — a body
+ * class set in an effect would flash the full-height header on every navigation
+ * before collapsing it.
+ */
+:root {
+  --compact-header-height: 84px;
+}
+
+.header-main:not(.full-header) {
+  height: var(--compact-header-height);
+}
+
+/* The bar is fixed, so it needs its own background once the hero is gone. */
+.header-main:not(.full-header) .header-top {
+  background: linear-gradient(180deg, #ffffff 0%, #f3e8ff 100%);
+}
+
+/* The bar is fixed, so it needs its own background once the hero is gone. */
+.form-open .header-main:not(.full-header) .header-top {
+  background: none;
+}
+
+/* Not `display: none` — the hero has to stay animatable for `form-open`. */
+.header-main:not(.full-header) .banner-section {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-30px);
+}
+
+/* No scroll threshold to cross here: the pill is the only way to search. */
+.header-main:not(.full-header) .form-input-section-sticky {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Pill clicked: reinstate the full-height header and slide the hero down. */
+.form-open .header-main:not(.full-header) {
+  position: fixed;
+  height: 300px;
+}
+.form-open .header-main:not(.full-header) .form-input-section-sticky {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-5px);
+}
+.form-open .header-main:not(.full-header) .banner-section {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+@media (max-width: 991px) {
+  :root {
+    --compact-header-height: 82px;
+  }
+}
+
+@media (max-width: 567px) {
+  :root {
+    --compact-header-height: 65px;
+  }
+}
+
+/* --- Hero search: destination autocomplete + date range ---------------------- */
+.search-where {
+  position: relative;
+}
+
+/* Shared by all three fields — Where, When and the category field. */
+.field-clear {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  color: #1f1741;
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+}
+
+.field-clear:hover {
+  background-color: #e6dff5;
+}
+
+/* The clear button overlaps the value, so keep text out from under it. */
+
+/* --- Active field: the segment in play lifts out of the pill (Airbnb-style) --- */
+.form-input-group {
+  border-radius: 48px;
+  transition:
+    background-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+.form-input-group.active {
+  background-color: #fff;
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.16);
+}
+
+/* The dividers either side of an active segment cut through its highlight.
+   Scoped and matched in weight to the handover rule that draws them
+   (`.form-input-section:not(:hover) .form-input-group:not(:first-child):before`),
+   so it wins on source order rather than by reaching for `!important`. */
+.form-input-section .form-input-group.active:not(:first-child):before,
+.form-input-section .form-input-group.active + .form-input-group:before {
+  opacity: 0;
+}
+
+.search-places {
+  z-index: 40;
+  background-color: #fff;
+  border-radius: 30px;
+  max-height: 320px;
+  margin: 0;
+  list-style: none;
+  position: absolute;
+  top: calc(100% + 13px);
+  left: 0;
+  overflow-y: auto;
+  box-shadow: 0px 3px 16px 0px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  padding: 20px;
+}
+
+.search-places li {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 3px;
+  border-radius: 8px;
+  padding: 5px 15px 5px 5px;
+}
+
+.search-places li:hover {
+  background-color: #f7f3fd;
+}
+
+.search-places .location-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 55px;
+  height: 55px;
+  min-width: 55px;
+  background-color: #faf5ff;
+  border-radius: 8px;
+}
+
+.search-places strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600 !important;
+  color: #1f1741;
+  margin-bottom: 2px;
+}
+
+.search-places small {
+  display: block;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+/* --- Who: guest steppers --- */
+.search-who {
+  position: relative;
+}
+
+.form-label-static {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.form-input--button {
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  background: none;
+  border: none;
+  color: rgba(31, 23, 65, 0.6);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* The panel anchors to the form, so the form has to be the containing block —
+   the handover CSS leaves `.banner-form` static. */
+.banner-form {
+  position: relative;
+}
+
+/* Dismisses the hero once it has been expanded over the page.
+   `display: none` here, switched on in `responsive.css` below the `lg`
+   breakpoint: on desktop the hero collapses on scroll, so the button would be a
+   control for a problem that only exists on a touch screen. Styled here rather
+   than there so the responsive layer only has to flip its visibility. */
+.banner-form-close {
+  color: #8f8686;
+  display: block;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  border: navajowhite;
+  text-transform: capitalize;
+  padding: 0;
+  height: auto;
+  width: auto;
+  margin: 10px auto 0;
+  font-weight: 500;
+  text-decoration: underline;
+  font-size: 15px;
+
+}
+
+/* `.header-main` sets `z-index: 9`, which caps everything inside it — including
+   a panel that hangs below the header over the page content. Lift the whole
+   header while a panel is open so its controls stay clickable, not just visible. */
+.header-main:has(.hero-panel) {
+  z-index: 60;
+}
+
+.hero-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 5px);
+  padding: 8px 24px 16px;
+  background-color: #fff;
+  border-radius: 30px;
+  box-shadow: 0 12px 40px rgba(31, 23, 65, 0.18);
+}
+
+.hero-panel--extra {
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - 40px);
+}
+
+.hero-panel--dates {
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 30px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 650px;
+}
+
+/* Still needed by the single-date pickers (the account form, the hero's year
+   field): antd draws its range-hover box here, which those have no use for. */
+.ant-picker-dropdown .ant-picker-content td::before {
+  display: none;
+}
+
+.hero-panel-title {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.hero-detail-panel {
+  padding: 15px 0;
+}
+
+.hero-field {
+  display: block;
+  margin-top: 14px;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.65);
+}
+
+.hero-field > span,
+.hero-field > label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.hero-field .form-control {
+  padding: 10px 15px;
+  font-size: 14px;
+}
+
+.hero-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.hero-field-row .hero-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.guest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 8px 0;
+}
+
+.guest-row:last-child {
+  border-bottom: none;
+}
+
+.hero-detail-panel .guest-row-label {
+  color: rgba(31, 23, 65, 0.8);
+}
+
+.guest-row-hint {
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.guest-stepper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.guest-stepper button {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  background-color: #8121cf;
+  color: #fff;
+  border-radius: 50%;
+  transition: all 0.15s ease-in-out;
+  padding: 8px;
+}
+
+.guest-stepper button:hover:not(:disabled) {
+  background-color: #3d0665;
+  color: #fff;
+}
+
+.guest-stepper button:disabled {
+  background-color: #faf5ff;
+  color: #8121cf;
+  cursor: not-allowed;
+}
+
+.guest-stepper span {
+  min-width: 20px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* --- Checkout: "Confirm and Pay" -------------------------------------------- */
+.checkout-sec {
+  padding: 45px 0 70px;
+}
+.checkout-sec .container {
+  max-width: 1250px;
+}
+.checkout-row .col-lg-5 {
+  width: 450px;
+}
+.checkout-row .col-lg-7 {
+  width: calc(100% - 450px);
+}
+
+.checkout-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.checkout-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  background-color: #f7f3fd;
+  border-radius: 50%;
+}
+
+.checkout-back .icon {
+  width: 15px;
+  height: 15px;
+  background-color: #8121cf;
+}
+
+.checkout-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.checkout-row {
+  align-items: start;
+}
+
+.checkout-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkout-step {
+  margin-bottom: 16px;
+  padding: 22px;
+  background-color: #fff;
+  border: 1px solid #c1c1c1;
+  border-radius: 18px;
+}
+
+.checkout-step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.checkout-step-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.checkout-step-done {
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.6);
+}
+.checkout-step.is-active {
+  box-shadow: 0px 4px 8px 0px #0000001a;
+  border-color: #f2f2f2;
+}
+.checkout-step-body {
+  padding-top: 4px;
+  padding-left: 50px;
+  padding-right: 40px;
+}
+
+.checkout-lead {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.checkout-lead small {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.checkout-wallet,
+.checkout-method,
+.checkout-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: #1f1741;
+  font-weight: 500;
+}
+
+.checkout-wallet {
+  padding: 16px 18px;
+  border: 1px solid #d1d1d1;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 500;
+  gap: 15px;
+}
+.checkout-wallet:hover {
+  background-color: #fdfaff;
+}
+.checkout-wallet-icon {
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  background-color: #8121cf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  display: none;
+}
+.checkout-wallet input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #8121cf;
+  border-radius: 4px;
+}
+.checkout-wallet input:checked {
+  background: url(/images/svg/check.svg) no-repeat;
+  background-size: 9px 8px;
+  background-position: center;
+}
+.checkout-wallet small {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.6);
+}
+.checkout-wallet small font {
+  font-weight: 500;
+  color: #1f1741;
+}
+/* What the chosen gateway adds or converts, under the radio group it belongs to.
+   Tinted rather than muted: it is a charge the visitor is agreeing to, so it has
+   to read as information they need, not as fine print. */
+.checkout-method-note {
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #1f1741;
+  background-color: #faf5ff;
+  border-radius: 10px;
+}
+
+.checkout-method-note + .checkout-method-note {
+  margin-top: 6px;
+}
+.checkout-wallet-group,
+.checkout-methods--group {
+  border-bottom: 1px solid #c1c1c1;
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+.checkout-methods--group-title {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.2;
+  color: #1f1741;
+  margin-bottom: 15px;
+}
+.checkout-methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.checkout-method {
+  padding: 12px;
+  border: 1px solid #d1d1d1;
+  border-radius: 10px;
+  cursor: pointer;
+  align-items: center;
+}
+.checkout-method input {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #8121cf;
+  border-radius: 50%;
+}
+.checkout-method input:checked {
+  background: #8121cf;
+  box-shadow: 0 0 0 2px #fff inset;
+}
+
+.checkout-method small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.checkout-method.is-selected {
+  border-color: #8121cf;
+  background-color: #faf5ff;
+}
+
+.checkout-terms {
+  margin: 22px 0 16px;
+  color: rgba(31, 23, 65, 0.8);
+}
+.checkout-terms input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(31, 23, 65, 0.56);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.checkout-terms input:checked {
+  border-color: #8121cf;
+  background: url(/images/svg/check.svg) no-repeat;
+  background-size: 9px 8px;
+  background-position: center;
+}
+.checkout-error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #d92d20;
+}
+
+/* --- Checkout summary ------------------------------------------------------- */
+.checkout-summary {
+  position: sticky;
+  top: 110px;
+  padding: 25px;
+  background-color: #fff;
+  border: 1px solid #c1c1c1;
+  border-radius: 14px;
+}
+
+.checkout-summary-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding-bottom: 20px;
+}
+
+.checkout-summary-img {
+  width: 95px;
+  aspect-ratio: 100/95;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.checkout-summary-name {
+  display: block;
+  font-size: 17px;
+  font-weight: 500 !important;
+  color: #1f1741;
+  line-height: 1.2;
+  margin-bottom: 5px;
+}
+
+.checkout-summary-location,
+.checkout-summary-rating,
+/* Same line, honest name: the booking page puts the category here, and calling
+   that a "rating" in the markup would be a lie for the sake of reuse. */
+.checkout-summary-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+/* The head is a card in its own right on the booking page, so the padding that
+   separates it from the summary rows below has nothing to separate it from. */
+.checkout-step > .checkout-summary-head {
+  padding-bottom: 0;
+}
+
+/* Linked to the listing on the booking page; it has to stay the heading it looks
+   like rather than picking up the default link colour. */
+.checkout-summary-name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.checkout-summary-name a:hover {
+  color: #8121cf;
+}
+
+.checkout-summary-location .icon,
+.checkout-summary-rating .icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  background-color: #8121cf;
+}
+
+.checkout-summary-policy {
+  margin: 0 0 15px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.checkout-summary-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 0;
+  border-top: 1px solid #c1c1c1;
+}
+
+.checkout-summary-label {
+  font-size: 16px;
+  font-weight: 500 !important;
+  color: #1f1741;
+  margin-bottom: 5px;
+}
+
+.checkout-summary-content {
+  font-size: 14px;
+  color: rgba(31, 23, 65, 0.7);
+  line-height: 1.6;
+}
+
+/* The hour count beside an hourly booking's date — the same line, but weighted
+   so it reads as the answer to "how long", not as part of the date. */
+.checkout-summary-hours {
+  font-weight: 500;
+  color: #1f1741;
+  white-space: nowrap;
+}
+
+.checkout-summary-row a,
+.checkout-summary-policy a {
+  padding: 0;
+  color: #1f1741;
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+
+.checkout-summary-policy a:hover {
+  color: #8121cf;
+}
+.checkout-summary-edit {
+  color: #8121cf;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 0;
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+.checkout-summary-edit:hover {
+  color: #8121cf;
+}
+
+/* --- Change dates / Change guests dialogs ----------------------------------- */
+.checkout-edit-modal .ant-modal-content {
+  border-radius: 16px;
+}
+
+.checkout-edit-modal .ant-modal-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.checkout-edit-note {
+  color: #1f1741;
+  margin: 10px 0;
+  font-size: 14px;
+  background-color: #faf5ff;
+  border-radius: 8px;
+  padding: 10px 15px;
+  border: 1px solid #e7d8f5;
+}
+.checkout-edit-modal .guest-row {
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0eaf8;
+}
+
+.checkout-edit-modal .guest-row:last-of-type {
+  border-bottom: none;
+}
+
+.checkout-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.checkout-edit-actions .btn-link {
+  padding: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f1741;
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+
+.checkout-edit-actions .btn-sm {
+  min-width: 120px;
+  padding: 12px 24px;
+}
+
+/* The calendar itself is styled in `@/styles/date-range-calendar.css`; this is
+   only the dialog's spacing around it. */
+.checkout-dates-calendar {
+  margin-top: 4px;
+}
+
+.checkout-summary-prices {
+  padding-top: 20px;
+  border-top: 1px solid #c1c1c1;
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* A re-quote is in flight: dim rather than blank, so the figures do not jump. */
+.checkout-summary-prices.is-pricing {
+  opacity: 0.55;
+}
+
+.checkout-summary-prices > strong {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.checkout-summary-prices ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkout-summary-prices li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 2px 0;
+}
+.checkout-summary-prices li .checkout-summary-amount {
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.checkout-summary-prices li.wallet,
+.checkout-summary-prices li.wallet .checkout-summary-amount {
+  color: #19c319;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.checkout-summary-sublines {
+  flex: 1 1 100%;
+  padding-left: 14px !important;
+}
+
+.checkout-summary-sublines li {
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.5);
+}
+
+.checkout-summary-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid #c1c1c1;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+.checkout-summary-total strong {
+  font-weight: 600 !important;
+}
+
+.checkout-summary-total strong:last-child {
+  color: #8121cf;
+}
+
+.checkout-summary-muted {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.checkout-summary-estimate {
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(31, 23, 65, 0.7);
+  background-color: #f7f3fd;
+  border-radius: 8px;
+}
+
+@media (max-width: 991px) {
+  .checkout-summary {
+    position: static;
+    margin-top: 24px;
+  }
+}
+
+/* --- Booking card: price, dates, guests ------------------------------------- */
+.service-booking-card {
+  padding: 24px;
+  background-color: #fff;
+  border: 1px solid #e2dcf0;
+  border-radius: 16px;
+}
+
+.booking-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 15px;
+  /* Held at the height of the 18px price it usually contains, so swapping in the
+     spinner while a quote is in flight does not shift the card below it. */
+  min-height: 27px;
+}
+
+/* One bordered block, split by internal rules — not three separate inputs. */
+.booking-fields {
+  border: 1px solid #555;
+  border-radius: 20px;
+  overflow: visible;
+  margin-bottom: 20px;
+}
+
+/* Every cell of the block — the two date cells and the guest trigger — is the
+   same object: a full-width button with a caption over a value. Described once
+   here and worn by both `<DateRangeField>` (via its `classNames` prop) and
+   `<BookingGuestPicker>`, so the halves cannot drift apart.
+ *
+ * Scoped to `.booking-fields` for the specificity, not for the reach: this sheet
+ * loads before `date-range-calendar.css`, so an unscoped `.booking-field-trigger`
+ * would lose the padding tie to that sheet's `.drf-cell` reset. */
+.booking-fields .booking-field-trigger {
+  width: 100%;
+  padding: 12px 20px;
+  text-align: left;
+  background: none;
+  border: none;
+}
+
+.booking-fields .booking-field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1f1741;
+}
+
+.booking-fields .booking-field-value {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+/* Hourly listings only — another cell of the same bordered block, but a stepper
+   in place rather than a trigger, since there is one number to set. */
+.booking-hours {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-top: 1px solid #555;
+}
+
+.booking-guests {
+  position: relative;
+  border-top: 1px solid #555;
+}
+
+/* Only what the guest trigger does *differently*: it lays its caption, value and
+   chevron out on one wrapping line, which the date cells have no need of. */
+.booking-guests-trigger {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.booking-guests-trigger .booking-field-label {
+  flex: 1 1 100%;
+}
+
+.booking-guests-value {
+  flex: 1 1 auto;
+}
+
+.booking-guests-trigger .icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  background-color: #8121cf;
+}
+
+.guest-row-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.guest-row-hint,
+.guest-row-hint-link {
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.guest-row-hint-link {
+  text-decoration: underline;
+}
+
+.booking-disclaimer {
+  margin: 14px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.booking-hint {
+  margin: 0px 0 15px;
+  font-size: 13px;
+  text-align: center;
+  color: #1f1741;
+  font-weight: 500;
+  background-color: #f2f2f2;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.booking-error {
+  color: #ff1200;
+  margin: 12px 0 12px;
+  font-size: 13px;
+  background: #ff000014;
+  padding: 10px;
+  text-align: center;
+}
+
+/* --- Booking column: policy card + house rules ------------------------------ */
+.service-booking-column {
+  position: sticky;
+  top: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 45px;
+}
+
+.service-policy-card {
+  padding: 10px 30px;
+  background-color: #fff;
+  border: 1px solid #d1d1d1;
+  border-radius: 30px;
+}
+
+.policy-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 0;
+  border-bottom: 1px solid #f0eaf8;
+}
+
+.policy-row:last-child {
+  border-bottom: none;
+}
+
+.policy-row-icon {
+  background-color: #faf5ff;
+  padding: 5px;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.policy-row-icon .icon {
+  width: 23px;
+  height: 23px;
+  flex: 0 0 auto;
+  background-color: #8121cf;
+}
+
+.policy-row h3 {
+  margin: 0 0 3px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.policy-row p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+/* The card's two "more" affordances — one a link, one a dialog trigger — have to
+   read identically, so the button is stripped back to link styling. */
+.policy-row a,
+.policy-link {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f1741;
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+
+.policy-row a:hover,
+.policy-link:hover {
+  color: #8121cf;
+}
+
+.house-rules-modal .ant-modal-content {
+  border-radius: 16px;
+}
+
+.house-rules-modal .ant-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.house-rules-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.house-rules-list li {
+  margin-bottom: 7px;
+  font-size: 15px;
+  color: rgba(31, 23, 65, 0.8);
+}
+
+/* --- Framed policy page ----------------------------------------------------
+   `/cancellation-policy`. No `.container`: the framed page brings its own
+   layout and gutters, so wrapping it in ours would indent it twice, and
+   `<SiteChrome>` keeps the header and footer off this route entirely — the
+   frame is the whole page. */
+
+.policy-page {
+  width: 100%;
+}
+
+.policy-page-frame {
+  display: block;
+  width: 100%;
+  /* `dvh`, not `vh`: on mobile `100vh` measures the viewport *without* the
+     browser's collapsing address bar, so the frame would overhang by its height
+     and leave the page scrolling beside the frame's own scrollbar. */
+  height: 100dvh;
+  border: 0;
+}
+
+/* --- No results ------------------------------------------------------------
+   Left-aligned in the results column rather than centred like the inline
+   `.empty-state` note, because on `/search` it sits directly under the `<h1>`
+   and reads as that column's content rather than a floating notice. */
+.no-records {
+  padding: 0 0 40px;
+}
+
+/* Shown everywhere this block appears, `/search` included — the `<h1>` there
+   keeps the real search title, so "No exact matches" is this block's own heading
+   and sits directly above the line explaining what to try. */
+.no-records .empty-state-title {
+  margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.no-records .empty-state-message {
+  margin: 8px 0 0 0;
+  font-size: 15px;
+  color: rgba(31, 23, 65, 0.65);
+}
+
+/* Sits directly under the copy, at its natural width rather than the 160px
+   minimum every `.btn` otherwise carries. */
+.no-records .btn-outline {
+  display: inline-block;
+  min-width: auto;
+  margin-top: 15px;
+  padding: 12px 22px;
+  border-radius: 8px;
+}
+
+.no-records .btn-outline:hover {
+  color: #fff;
+  background-color: #1f1741;
+}
+
+/* --- Card specs: the per-rental-type row between location and price --------- */
+.product-card-specs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.product-card-specs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1;
+}
+
+/* `.icon` is 24px by default — far too heavy next to 13px text. */
+.product-card-specs .icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  background-color: #5c5c5c;
+}
+
+/* `icon` is optional on a highlight; two glyphless specs in a row need a
+   separator to read as distinct items. Drawn between rather than after, so the
+   row never ends on a stray dot however many specs a listing carries. */
+.product-card-specs li:not(:has(.icon)) + li:not(:has(.icon))::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-right: 5px;
+  background-color: rgba(31, 23, 65, 0.35);
+  border-radius: 50%;
+}
+
+/* The detail page reuses the row at its own scale — the card's is sized to sit
+   in a 20vw column, this one under a full-width heading. */
+.service-block > .product-card-specs {
+  margin-bottom: 0;
+  gap: 8px 12px;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.service-block > .product-card-specs .icon {
+  width: 17px;
+  height: 17px;
+}
+
+.service-block .service-details-rating {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.service-block .service-details-rating .icon {
+  color: #8121cf;
+  width: 17px;
+  height: 17px;
+  margin-top: -2px;
+}
+
+/* --- Remote listing images have mixed dimensions; lock the card ratio --- */
+.product-card-img-box .product-card-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background-color: #f5e7fe;
+}
+
+/* --- Horizontal rails: scroll-snap track driven by the design's prev/next arrows --- */
+.product-row--rail {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.product-row--rail::-webkit-scrollbar {
+  display: none;
+}
+
+.product-row--rail > .product-col {
+  flex: 0 0 auto;
+  width: 85%;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 576px) {
+  .product-row--rail > .product-col {
+    width: 50%;
+  }
+}
+
+@media (min-width: 992px) {
+  .product-row--rail > .product-col {
+    width: 33.3333%;
+  }
+}
+
+@media (min-width: 1200px) {
+  .product-row--rail > .product-col {
+    width: 25%;
+  }
+}
+
+@media (min-width: 1400px) {
+  .product-row--rail > .product-col {
+    width: 20%;
+  }
+}
+
+/* --- Grid layout used by listing pages --- */
+.product-row > .product-col {
+  margin-bottom: 40px;
+}
+
+/* --- Empty / error states --- */
+
+.notice-bar {
+  background-color: #fff4e5;
+  color: #7a4b00;
+  padding: 10px 0;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* --- Forms (login, account) — the handover CSS ships no form styles --- */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 14px;
+  color: #1f1741;
+  background-color: #fff;
+  border: 1px solid #e2dcf0;
+  border-radius: 30px;
+  box-shadow: none !important;
+  transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+.form-control::placeholder {
+  color: rgba(31, 23, 65, 0.4);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #8121cf;
+  box-shadow: 0 0 0 3px rgba(129, 33, 207, 0.12);
+}
+
+.form-control.is-invalid {
+  border-color: #d92d20;
+}
+
+.invalid-feedback {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #d92d20;
+}
+
+.input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-group .form-control {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-group .input-group-text {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background-color: transparent;
+  border: 1px solid #e2dcf0;
+  border-left: none;
+  border-radius: 0 30px 30px 0;
+  color: #8121cf;
+  cursor: pointer;
+}
+.input-group .input-group-text .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Dialling-code prefix: a label, not a control. */
+.input-group .input-group-text--static {
+  border-left: 1px solid #e2dcf0;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  cursor: default;
+}
+
+.input-group .input-group-text--static + .form-control--code {
+  max-width: 84px;
+  border-radius: 0;
+  border-right: none;
+}
+
+.input-group .form-control--code + .form-control {
+  border-radius: 0 8px 8px 0;
+}
+
+.account-details-gender {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-top: 8px;
+}
+
+.account-details-gender .form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.btn-label:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn.btn-primary {
+  background-color: #8121cf;
+  border-color: #8121cf;
+  color: #fff;
+}
+
+.btn.btn-primary:hover:not(:disabled) {
+  background-color: #6a17ad;
+  border-color: #6a17ad;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Authentication pages (login, verify OTP, forgot & reset password) ---
+ *
+ * Ported from the ecommerce storefront so both apps present one auth journey.
+ *
+ * The control rules are scoped to `.authentication-wrapper` deliberately: the
+ * app-wide `.form-control` above is a 30px pill on a #e2dcf0 border, and the
+ * shared auth design uses the 8px / 45px / #c1c1c1 control. Scoping the override
+ * keeps every other form in the app on the pill.
+ */
+.authentication-wrapper {
+  background-color: #f3e8ff;
+  min-height: 700px;
+  /* The storefront spells this `py-70`; folded in rather than adding a one-off
+     utility class the rest of this app has no use for. */
+  padding-block: 70px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  position: relative;
+}
+
+.authentication-sec {
+  display: block;
+  max-width: 430px;
+  margin: auto;
+  width: 100%;
+  background-color: #fff;
+}
+
+.authentication-logo {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 245px;
+  width: 100%;
+  padding: 40px 20px 54px;
+}
+
+.authentication-box {
+  padding: 50px 20px;
+}
+
+.auth-logo-img {
+  max-width: 50px;
+  display: block;
+  margin-bottom: 32px;
+}
+
+.auth-logo-img img {
+  width: 100%;
+  height: auto;
+}
+
+.welcome-title {
+  color: #fff;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.welcome-text span {
+  color: #fff;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.4;
+  display: block;
+  margin-bottom: 0;
+}
+
+.authentication-wrapper .form-label {
+  color: rgba(31, 23, 65, 0.7);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.authentication-wrapper .form-control {
+  height: 45px;
+  border: 1px solid #c1c1c1;
+  border-radius: 8px;
+  font-weight: 500;
+  line-height: 1;
+  resize: none;
+}
+
+.authentication-wrapper .form-group {
+  margin-bottom: 20px;
+}
+
+.authentication-wrapper .input-group .form-control {
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+}
+
+.authentication-wrapper .input-group .input-group-text {
+  border: 1px solid #c1c1c1;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  background-color: #fff;
+}
+
+/* A password field and its reveal toggle have to read as one control, so an
+   invalid pair colours both halves — not just the input. */
+.authentication-wrapper .input-group.is-invalid .form-control,
+.authentication-wrapper .input-group.is-invalid .input-group-text {
+  border-color: #d92d20;
+}
+
+.forgot-password a {
+  color: #8121cf;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  display: block;
+  margin-bottom: 0;
+  transition: all 0.4s ease-in-out;
+}
+
+.forgot-password a:hover {
+  color: #00e783;
+}
+
+.authentication-box .submit-btn {
+  width: 100%;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.authentication-box .submit-btn .btn {
+  width: 100%;
+}
+
+.sign-up-content {
+  text-align: center;
+  width: 100%;
+  color: #000;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.sign-up-content a,
+.sign-up-content .btn-label {
+  color: #8121cf;
+  font-weight: 600;
+  transition: all 0.4s ease-in-out;
+}
+
+.sign-up-content a:hover,
+.sign-up-content .btn-label:hover:not(:disabled) {
+  color: #00e783;
+}
+
+/* --- OTP boxes --- */
+.otp-verification-form .row {
+  --bs-gutter-x: 10px;
+}
+
+.authentication-wrapper .otp-verification-form .form-group .form-control {
+  text-align: center;
+  height: 56px;
+  padding: 12px 5px;
+  border-color: #c1c1c1;
+  background-color: #f5f5f5;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.authentication-wrapper .otp-verification-form .form-group .form-control:focus {
+  background-color: #fff;
+}
+
+/* A filled box inverts. Keyed off `:not(:placeholder-shown)` rather than a class
+   so it needs no state plumbing — which is also why every OTP box must keep the
+   single-space placeholder that makes the selector fire. */
+.authentication-wrapper .otp-verification-form .form-group .form-control:not(:placeholder-shown) {
+  border: 1px solid #8121cf;
+  background-color: #8121cf;
+  color: #fff;
+}
+
+.otp-verification-form .sign-up-content {
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+
+.time-remaining-title {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  color: #000;
+  margin-top: 20px;
+}
+
+.time-remaining-title span {
+  color: #8121cf;
+  font-weight: 600;
+}
+
+/* --- Social sign-in --- */
+.or-divider-login {
+  text-align: center;
+  width: 100%;
+  line-height: 1.2;
+  font-size: 14px;
+}
+
+.social-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.social-login .btn {
+  margin: 0 !important;
+  width: 50%;
+  min-width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 0 !important;
+  font-size: 12px !important;
+  font-weight: 500;
+}
+
+.social-login img {
+  max-width: 18px;
+}
+
+.social-login .btn-facebook {
+  background: #0064e0;
+  border-color: #0064e0;
+  color: #fff;
+}
+
+.social-login .btn-facebook:hover {
+  background: #0458be;
+  border-color: #0458be;
+  color: #fff;
+}
+
+.social-login .btn-google {
+  background: #f3f3f3;
+  border: 1px solid #f3f3f3;
+  color: #000;
+}
+
+.social-login .btn-google:hover {
+  background: #ddd;
+  border-color: #ddd;
+  color: #000;
+}
+
+/* Auth breakpoints live here, not in `responsive.css`: the section owns its own
+   media queries, and splitting one layout across two files hides half of it. */
+@media (max-width: 1199.98px) {
+  .authentication-logo {
+    padding: 30px 20px;
+    min-height: 205px;
+  }
+
+  .auth-logo-img {
+    margin-bottom: 30px;
+  }
+
+  .welcome-title {
+    font-size: 30px;
+    margin-bottom: 10px;
+  }
+
+  .authentication-box {
+    padding: 30px 15px;
+  }
+
+  .authentication-box .submit-btn {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .auth-logo-img {
+    max-width: 40px;
+    margin-bottom: 20px;
+  }
+
+  .welcome-title {
+    font-size: 24px;
+  }
+
+  .authentication-logo {
+    padding: 30px 15px;
+    min-height: auto;
+  }
+
+  .authentication-wrapper {
+    min-height: 500px;
+    padding-block: 50px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Two 50% buttons cannot hold "Login With Facebook" at this width. */
+  .social-login {
+    flex-wrap: wrap;
+  }
+
+  .social-login .btn {
+    width: 100%;
+  }
+
+  .social-login img {
+    max-width: 16px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .authentication-wrapper {
+    min-height: auto;
+    padding-block: 30px;
+  }
+
+  .auth-logo-img {
+    max-width: 35px;
+    margin-bottom: 15px;
+  }
+
+  .authentication-logo {
+    padding: 20px 15px;
+  }
+
+  .welcome-title {
+    font-size: 22px;
+  }
+
+  .welcome-text span {
+    font-size: 12px;
+  }
+
+  .forgot-password a,
+  .sign-up-content,
+  .time-remaining-title {
+    font-size: 12px;
+  }
+
+  .time-remaining-title {
+    margin-top: 12px;
+  }
+
+  .authentication-wrapper .otp-verification-form .form-group .form-control {
+    height: 48px;
+    font-size: 18px;
+  }
+}
+
+/* --- My Account --- */
+.my-account-sec {
+  padding: 50px 0 70px;
+}
+.my-account-sec .container {
+  max-width: 1400px;
+}
+.my-acc-wrap {
+  position: sticky;
+  top: 130px;
+}
+.my-account-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.my-account-title span {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.6);
+}
+.my-account-tabing {
+  border: 1px solid #eee7f8;
+  border-radius: 12px;
+  background: #faf7fe;
+  overflow: hidden;
+}
+
+.my-account-dropdown-mob {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background-color: #f7f3fd;
+  border: 1px solid #e2dcf0;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.my-account-tabing .nav-link {
+  display: block;
+  width: 100%;
+  padding: 13px 16px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f1741;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  transition: all 0.2s ease-in-out;
+}
+
+.my-account-tabing .nav-link:hover:not(:disabled) {
+  background-color: #f2e9fc;
+  color: #8121cf;
+}
+
+.my-account-tabing .nav-link.active {
+  background-color: #8121cf;
+  color: #fff;
+}
+
+.my-account-details {
+  background-color: #fff;
+  border: 1px solid #eee7f8;
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.my-account-panel-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.account-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #eee7f8;
+}
+
+.account-profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #f2e9fc;
+}
+
+.account-profile-name {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.account-profile-email {
+  font-size: 14px;
+  color: rgba(31, 23, 65, 0.65);
+}
+
+.account-wallet {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  background-color: #f7f3fd;
+  border-radius: 10px;
+}
+
+.account-wallet .icon {
+  width: 28px;
+  height: 28px;
+  background-color: #8121cf;
+}
+
+.account-wallet-amount {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.account-wallet p {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.65);
+}
+
+.my-account-subtitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 28px 0 14px;
+}
+
+/* --- Avatar upload --- */
+.account-avatar {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.account-avatar-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(31, 23, 65, 0.45);
+  color: #fff;
+}
+
+.account-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  min-width: auto;
+  padding: 9px 14px;
+  font-size: 13px;
+  text-transform: none;
+  color: #8121cf;
+  border-color: #8121cf;
+  border-radius: 8px;
+  background-color: transparent;
+}
+
+.account-avatar-btn:hover:not(:disabled) {
+  background-color: #8121cf;
+  color: #fff;
+}
+
+.account-avatar-btn .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.account-avatar-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.55);
+}
+
+/* --- Orders --- */
+/* Window chips left, status dropdown right, baseline-aligned. */
+.order-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.order-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.order-status-select {
+  flex: 0 0 auto;
+  min-width: 170px;
+}
+
+/* Native select styled to match .form-control, with a drawn caret. */
+.form-select {
+  appearance: none;
+  padding: 10px 34px 10px 14px;
+  font-size: 14px;
+  background-image: url('/images/svg/down-arrow.svg');
+  background-position:
+    calc(100% - 15px) center,
+    calc(100% - 13px) center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  background-size: 12px;
+}
+
+@media (max-width: 575px) {
+  .order-filter-row {
+    align-items: stretch;
+  }
+
+  .order-status-select {
+    width: 100%;
+  }
+}
+
+.order-filter {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f1741;
+  background-color: #f7f3fd;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  transition: all 0.2s ease-in-out;
+}
+
+.order-filter:hover:not(.active) {
+  border-color: #8121cf;
+  color: #8121cf;
+}
+
+.order-filter.active {
+  background-color: #8121cf;
+  color: #fff;
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* --- Order detail --- */
+.order-back {
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.order-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.order-detail-row {
+  row-gap: 24px;
+}
+
+.order-outcome {
+  padding: 14px 18px;
+  margin-bottom: 22px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.order-outcome p {
+  margin: 4px 0 0;
+}
+
+.order-outcome--danger {
+  background-color: #fdeceb;
+  color: #91221c;
+}
+
+.order-outcome--success {
+  background-color: #e3f9ed;
+  color: #0b6b3a;
+}
+
+.order-outcome--info,
+.order-outcome--pending {
+  background-color: #fff4e5;
+  color: #7a4b00;
+}
+
+.charge-note {
+  color: rgba(31, 23, 65, 0.5);
+  font-size: 12px;
+}
+
+.charge-credit {
+  color: #0b6b3a;
+}
+
+.order-total-row {
+  font-size: 16px;
+  font-weight: 700;
+  border-top: 2px solid #efe8fa;
+  border-bottom: none !important;
+  padding-top: 14px !important;
+}
+
+.order-deposit-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+/* --- Booking history ---------------------------------------------------------
+   Ported from the ecommerce site's order tracking so the two read alike, minus
+   its shipping-only pieces (the tracking-number row and its `> span` dividers,
+   which a rental has no equivalent for). The connecting rail is a `::before` on
+   each row rather than a border on the list, which is what lets the last entry
+   drop it and stop the line at the current status. */
+
+.order-history-title {
+  display: block;
+  margin-bottom: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #1f1741;
+}
+
+.order-tracking ul {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-tracking ul li {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  column-gap: 20px;
+  width: 100%;
+  padding-bottom: 28px;
+}
+
+.order-tracking ul li:last-child {
+  padding-bottom: 0;
+}
+
+/* Behind the icon, running the full height of the row it belongs to. */
+.order-tracking ul li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  width: 1px;
+  height: 100%;
+  background-color: #c283fd;
+}
+
+.order-tracking ul li:last-child::before {
+  display: none;
+}
+
+.order-tracking ul li .icon-box {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: #ead5ff;
+  border-radius: 50%;
+}
+
+.order-tracking ul li .icon-box .icon {
+  position: relative;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  background-color: #8121cf;
+}
+
+/* The newest entry — where the booking actually stands. */
+.order-tracking ul li.active .icon-box {
+  background-color: #8121cf;
+}
+
+.order-tracking ul li.active .icon-box .icon {
+  background-color: #fff;
+}
+
+.order-tracking-title {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #1f1741;
+  /* API-supplied types fall back to a lower-cased label ("delivery date change"),
+     so the first letter is capitalised here rather than in the mapper. */
+  text-transform: capitalize;
+}
+
+.order-tracking ul li p {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.order-tracking ul li .order-date {
+  display: block;
+  font-size: 13px;
+  color: #8121cf;
+}
+
+.order-reason {
+  margin-top: 8px;
+  font-size: 14px;
+  color: rgba(31, 23, 65, 0.8);
+}
+
+.order-reason b {
+  font-weight: 500 !important;
+}
+
+.order-timeline-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.order-timeline-attachments .attachments-item {
+  width: 90px;
+  transition: all 0.3s;
+}
+
+.order-timeline-attachments .attachments-item:hover {
+  opacity: 0.7;
+}
+
+.order-timeline-attachments .attachments-item img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 5px;
+}
+
+.order-payment {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.order-txn {
+  font-size: 12px;
+  word-break: break-all;
+  color: rgba(31, 23, 65, 0.5);
+}
+
+.order-period {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.order-card-number {
+  color: inherit;
+}
+
+.order-card-number:hover {
+  color: #8121cf;
+}
+
+.order-card-link {
+  display: inline-block;
+  margin-top: 8px;
+}
+
+.order-card {
+  border: 1px solid #eee7f8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.order-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background-color: #faf7fe;
+  border-bottom: 1px solid #eee7f8;
+}
+
+.order-card-number {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.order-card-placed {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.order-status {
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.order-status--pending {
+  background-color: #fff4e5;
+  color: #7a4b00;
+}
+
+.order-status--info {
+  background-color: #e8f1ff;
+  color: #14487f;
+}
+
+.order-status--success {
+  background-color: #e3f9ed;
+  color: #0b6b3a;
+}
+
+.order-status--danger {
+  background-color: #fdeceb;
+  color: #91221c;
+}
+
+.order-card-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 18px;
+}
+
+.order-card-img img {
+  display: block;
+  width: 140px;
+  height: 105px;
+  object-fit: cover;
+  border-radius: 8px;
+  background-color: #f5e7fe;
+}
+
+.order-card-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.order-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.order-card-title a {
+  color: inherit;
+}
+
+.order-card-title a:hover {
+  color: #8121cf;
+}
+
+.order-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.order-card-meta li {
+  position: relative;
+}
+
+.order-card-meta li + li::before {
+  content: '•';
+  position: absolute;
+  left: -10px;
+}
+
+.order-card-seller {
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.order-card-totals {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.order-card-total {
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.order-card-total small {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.order-card-deposit {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.6);
+  white-space: nowrap;
+}
+
+/* --- Wallet --- */
+.wallet-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  background: linear-gradient(120deg, #8121cf 0%, #1f1741 100%);
+  border-radius: 12px;
+  color: #fff;
+}
+
+.wallet-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+}
+
+.wallet-card-icon .icon {
+  width: 26px;
+  height: 26px;
+  background-color: #fff;
+}
+
+.wallet-card-amount {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.wallet-card-body p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+
+/* --- Wallet ledger (transactionHistory) --- */
+.wallet-txn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #e2dcf0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.wallet-txn {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+}
+
+.wallet-txn:not(:last-child) {
+  border-bottom: 1px solid #e2dcf0;
+}
+
+.wallet-txn-main {
+  min-width: 0;
+}
+
+.wallet-txn-type {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: #f3e8ff;
+  color: #8121cf;
+}
+
+.wallet-txn-type--credit {
+  background-color: #e7f8ef;
+  color: #0f7b47;
+}
+
+.wallet-txn-type--debit {
+  background-color: #fdecea;
+  color: #b42318;
+}
+
+.wallet-txn-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #1f1741;
+  /* Descriptions carry a full sentence plus an order number; let them wrap
+     rather than pushing the amount off the row. */
+  overflow-wrap: anywhere;
+}
+
+.wallet-txn-date {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.55);
+}
+
+.wallet-txn-amount {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  /* Tabular figures so the column of amounts lines up on the decimal. */
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wallet-txn-amount--credit {
+  color: #0f7b47;
+}
+
+.wallet-txn-amount--debit {
+  color: #b42318;
+}
+
+@media (max-width: 575.98px) {
+  .wallet-txn {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .wallet-txn-amount {
+    align-self: flex-start;
+  }
+}
+/* --- Address --- */
+.my-account-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.btn.btn-sm {
+  min-width: auto;
+  padding: 10px 16px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.btn.btn-md {
+  min-width: auto;
+  padding: 12px 20px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+.address-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.address-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  background-color: #faf7fe;
+  border: 1px solid #eee7f8;
+  border-radius: 10px;
+}
+
+.address-card-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.address-card-phone {
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.65);
+}
+
+.address-card-value {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(31, 23, 65, 0.8);
+}
+
+.address-card-actions {
+  display: flex;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #efe8fa;
+}
+
+.btn.btn-label {
+  min-width: auto;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8121cf;
+  background: none;
+  border: none;
+}
+
+.btn.btn-label:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.btn-label--danger {
+  color: #d92d20;
+}
+
+.address-card-shop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #8121cf;
+}
+
+.address-card-shop .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- Address form: General Information / Address Details / Parcel Shop --- */
+.address-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.address-group-title {
+  display: block;
+  float: none;
+  width: auto;
+  padding: 0;
+  margin-bottom: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+/* The grouped block is the shaded, collapsible one in the design. */
+.address-fieldset--grouped {
+  padding: 18px;
+  background-color: #f4f4f6;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.address-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  text-align: left;
+}
+
+.address-fieldset--grouped .address-group-title {
+  margin-bottom: 0;
+}
+
+.address-group-toggle[aria-expanded='true'] + div {
+  margin-top: 18px;
+}
+
+.address-group-toggle .icon {
+  width: 24px;
+  height: 24px;
+  background-color: #1f1741;
+}
+
+/* --- Mapbox autocomplete --- */
+.address-search-control {
+  position: relative;
+}
+
+.address-search-control .form-control {
+  padding-right: 44px;
+}
+
+.address-search-icon {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  color: #8121cf;
+  pointer-events: none;
+}
+
+.address-search-icon .icon {
+  width: 18px;
+  height: 18px;
+  background-color: #8121cf;
+}
+
+.address-suggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background-color: #fff;
+  border: 1px solid #e2dcf0;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(31, 23, 65, 0.12);
+}
+
+.address-suggestions button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  text-align: left;
+  color: #1f1741;
+  background: none;
+  border: none;
+  border-radius: 6px;
+}
+
+.address-suggestions button:hover,
+.address-suggestions button:focus-visible {
+  background-color: #f7f3fd;
+  color: #8121cf;
+}
+
+/* --- antd modal: match the app's type and spacing --- */
+.ant-modal:not(.asd) .ant-modal-container {
+  padding: 0;
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+  border-radius: 18px;
+}
+.ant-modal:not(.asd) .ant-modal-content {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ant-modal:not(.asd) .ant-modal-header {
+  padding: 15px 24px 13px;
+  margin: 0;
+  border-bottom: 1px solid #eee7f8;
+}
+
+.ant-modal:not(.asd) .ant-modal-title {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.ant-modal:not(.asd) .ant-modal-body {
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.ant-modal:not(.asd) .ant-modal-close {
+  top: 13px;
+  inset-inline-end: 18px;
+  border-radius: 50%;
+}
+
+/* --- antd DatePicker / RangePicker: match .form-control --- */
+.date-field.ant-picker {
+  width: 100%;
+  padding: 11px 12px;
+  font-family: inherit;
+  background-color: #fff;
+  border: 1px solid #e2dcf0;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.date-field.ant-picker:hover {
+  border-color: #8121cf;
+}
+
+.date-field.ant-picker-focused {
+  border-color: #8121cf;
+  box-shadow: 0 0 0 3px rgba(129, 33, 207, 0.12);
+}
+
+.date-field.is-invalid {
+  border-color: #d92d20;
+}
+
+.date-field .ant-picker-input > input {
+  font-family: inherit;
+  font-size: 14px;
+  color: #1f1741;
+}
+
+.date-field .ant-picker-input > input::placeholder {
+  color: rgba(31, 23, 65, 0.4);
+}
+
+.date-field .ant-picker-suffix .icon {
+  background-color: #8121cf;
+  width: 16px;
+  height: 16px;
+}
+.css-var-_R_1lb_.ant-slider {
+  --ant-slider-handle-size: 18px !important;
+}
+:where(.css-dev-only-do-not-override-149w44n).ant-slider .ant-slider-handle::after {
+  background-color: #8121cf !important;
+  box-shadow: 0 0 0 5px #ebd8f5 !important;
+}
+/* Inside a filter popover the picker sits on a tighter grid. */
+.filter-range {
+  display: block;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.65);
+}
+
+.filter-range > span {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.filter-range .date-field.ant-picker {
+  padding: 8px 10px;
+}
+
+/* The hero's year picker stands in for a `.form-control`, so it matches one. */
+.hero-field .hero-year-field.ant-picker {
+  padding: 10px 15px;
+}
+.ant-picker {
+  border-radius: 30px !important;
+}
+.hero-field .hero-year-field .ant-picker-input > input {
+  font-size: 14px;
+}
+
+/* The popover clips the calendar without this. */
+.ant-picker-dropdown {
+  z-index: 1200;
+}
+
+/* --- react-phone-input-2: match .form-control --- */
+.phone-field.react-tel-input .form-control {
+  width: 100%;
+  height: auto;
+  padding: 12px 15px 12px 52px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1f1741;
+  border: 1px solid #e2dcf0;
+  border-radius: 30px;
+  line-height: inherit;
+}
+.form-group .react-tel-input .selected-flag {
+  padding: 0 0 0 15px;
+  width: 45px;
+}
+.form-group .react-tel-input .selected-flag:hover,
+.form-group .react-tel-input .selected-flag:focus {
+  background-color: transparent;
+}
+.form-group .react-tel-input .flag-dropdown.open .selected-flag,
+.form-group .react-tel-input .flag-dropdown.open {
+  border-radius: 30px;
+  background: transparent;
+  border: none;
+}
+
+.phone-field.react-tel-input .form-control:focus {
+  border-color: #8121cf;
+  box-shadow: none !important;
+}
+
+.phone-field.is-invalid .form-control {
+  border-color: #d92d20;
+}
+
+.phone-field.react-tel-input .flag-dropdown {
+  background-color: transparent;
+  border: none;
+  border-right: none;
+  border-radius: 30px 0 0 30px;
+}
+
+.phone-field.react-tel-input .country-list {
+  margin-top: 4px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(31, 23, 65, 0.15);
+}
+
+.parcel-shop-address {
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  background-color: #f7ecfd;
+  border-radius: 8px;
+}
+
+.parcel-shop-address-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f1741;
+  margin-bottom: 4px;
+}
+
+.parcel-shop-address p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #1f1741;
+}
+
+.btn.btn-save {
+  min-width: auto;
+  padding: 13px 26px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #fff;
+  background-color: #06c270;
+  border-color: #06c270;
+  border-radius: 8px;
+}
+
+.btn.btn-save:hover:not(:disabled) {
+  background-color: #05a45f;
+  border-color: #05a45f;
+}
+
+.address-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 8px;
+}
+
+@media (max-width: 575px) {
+  .order-card-body {
+    flex-wrap: wrap;
+  }
+
+  .order-card-img img {
+    width: 100%;
+    height: 180px;
+  }
+
+  .order-card-totals {
+    text-align: left;
+  }
+}
+
+.account-details-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 30px;
+  margin: 0;
+}
+
+.account-details-row dt {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(31, 23, 65, 0.6);
+  margin-bottom: 4px;
+}
+
+.account-details-row dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.account-dropdown-logout {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #333;
+  background: none;
+  border: none;
+  text-align: left;
+}
+
+.account-dropdown-logout:hover {
+  color: #8121cf;
+}
+
+.section-loader {
+  display: flex;
+  justify-content: center;
+  padding: 50px 0;
+  color: #8121cf;
+}
+
+.panel-count {
+  display: inline-block;
+  min-width: 24px;
+  margin-left: 10px;
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8121cf;
+  background-color: #f2e9fc;
+  border-radius: 12px;
+  vertical-align: middle;
+}
+
+/* --- Wishlist heart: in-flight state --- */
+.product-card-whishlist:disabled {
+  cursor: progress;
+}
+
+.product-card-whishlist.is-pending {
+  opacity: 0.55;
+}
+
+/* --- Search / listing page: filter chips, results + map --- */
+.listing-sec {
+  padding: 35px 0;
+}
+
+.listing-container {
+  width: 100%;
+}
+
+.listing-filter-wrapper {
+  background: #f4eaff;
+  position: sticky;
+  top: 84px;
+  z-index: 11;
+}
+
+.listing-filter-bar {
+  min-height: 45px;
+  padding-bottom: 0;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* --- Filter bar: the Filter button plus the active category's quick chips --- */
+.filter-trigger,
+.filter-quick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1f1741;
+  background-color: #fff;
+  border: 1px solid #e2dcf0;
+  border-radius: 24px;
+  transition: all 0.18s ease-in-out;
+  white-space: nowrap;
+}
+
+.filter-trigger .icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  background-color: #8121cf;
+}
+
+.filter-trigger:hover,
+.filter-quick:hover {
+  border-color: #8121cf;
+  color: #8121cf;
+}
+
+/* The badge is the only thing that marks the button as carrying filters, so it
+   has to stay legible against both the resting and the active background. */
+.filter-trigger.has-value {
+  border-color: #8121cf;
+  color: #8121cf;
+}
+
+.filter-trigger-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+  color: #fff;
+  background-color: #3d0665;
+  border-radius: 10px;
+}
+
+.filter-quick.active {
+  background-color: #8121cf;
+  border-color: #8121cf;
+  color: #fff;
+}
+
+/* --- Filters modal ---------------------------------------------------------- */
+.filters-modal .ant-modal-content {
+  padding: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.filters-modal .ant-modal-header {
+  margin: 0;
+  padding: 16px 24px;
+  border-bottom: 1px solid #eee6f8;
+}
+
+.filters-modal .ant-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  color: #1f1741;
+}
+
+.filters-modal .ant-modal-body {
+  padding: 0;
+}
+.filters-modal.ant-modal:not(.asd) .ant-modal-body {
+  padding: 0;
+}
+.filters-modal-body {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+.filters-modal.ant-modal:not(.asd) .filters-modal-footer {
+  box-shadow: 0px -2px 12px 0px #0000001f;
+}
+.filters-section {
+  padding: 18px 0;
+  border-bottom: 1px solid #f0eaf8;
+}
+.filters-section:first-child {
+  padding-top: 0;
+}
+
+.filters-section:last-child {
+  border-bottom: none;
+}
+
+.filters-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filters-section-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.filters-section-head .filters-section-title {
+  margin-bottom: 0;
+}
+
+.filters-price-badge {
+  color: #8121cf;
+  background-color: #faf5ff;
+  border-radius: 18px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #c1c1c1;
+  line-height: 1.5;
+}
+
+/* Location: the same field as the hero's Where, in plain form-row chrome. The
+   suggestion list reuses `.search-places`, so it needs a positioned ancestor. */
+.place-field {
+  position: relative;
+}
+
+.place-field-label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.place-field .form-control {
+  padding: 11px 40px 11px 14px;
+  font-size: 14px;
+}
+
+/* Anchored to the field rather than the hero's full-width pill. The stacking
+   bump keeps the list above the sections it opens over. */
+.place-field .search-places {
+  z-index: 50;
+  top: calc(100% + 6px);
+  max-height: 260px;
+  padding: 12px;
+  border-radius: 16px;
+}
+
+.place-field .search-places .location-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+}
+
+/* The clear button is centred on the whole field by default; here it has a
+   label above it to clear. */
+.place-field .field-clear {
+  top: auto;
+  bottom: 7px;
+  transform: none;
+}
+
+.filters-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filters-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f1741;
+  background-color: #fff;
+  border: 1px solid #e2dcf0;
+  border-radius: 22px;
+  transition: all 0.18s ease-in-out;
+}
+.filters-pill:hover {
+  border-color: #8121cf;
+  color: #8121cf;
+}
+
+.filters-pill.active {
+  background-color: #8121cf;
+  border-color: #8121cf;
+  color: #fff;
+}
+
+.filters-section.filters-section-main-category .filters-pill {
+  background-color: #faf5ff;
+}
+.filters-section.filters-section-main-category .filters-pill.active {
+  background-color: #8121cf;
+  border-color: #8121cf;
+  color: #fff;
+}
+
+.filters-pill--icon {
+  padding-left: 10px;
+}
+
+.filters-pill img {
+  max-height: 25px;
+}
+
+/* Duration is two boxes to read, one `<DateRangeField>` to operate: both cells
+   drive the same calendar. Their look lives with the field, in
+   `date-range-calendar.css`. */
+
+.filters-price-slider.ant-slider {
+  margin: 15px 6px 15px;
+  width: calc(100% - 30px);
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+.filters-price-inputs {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.filters-price-inputs label {
+  flex: 1 1 0;
+  display: block;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.65);
+  max-width: 250px;
+}
+
+.filters-price-inputs span {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.filters-price-inputs .form-control {
+  padding: 10px 15px;
+  font-size: 14px;
+  background-color: #f2f2f2;
+  border: 1px solid #c1c1c1;
+}
+
+.filters-select.form-control {
+  padding: 11px 15px;
+  font-size: 14px;
+}
+
+/* The panel is shared with the hero, where it sits in a dropdown of its own. */
+.filters-section--extra .hero-detail-panel {
+  padding: 0;
+}
+
+.filters-section--extra .hero-field:first-of-type {
+  margin-top: 12px;
+}
+
+.filters-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  border-top: 1px solid #eee6f8;
+}
+
+.filters-modal-footer .btn-primary {
+  padding: 15px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  background-color: #1f1741;
+  border-color: #1f1741;
+}
+
+.filter-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.filter-panel-empty {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.filter-clear-all {
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #d92d20;
+  background: none;
+  border: none;
+}
+
+.filter-clear-all:hover {
+  text-decoration: underline;
+}
+
+.listing-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 42%);
+  gap: 28px;
+  align-items: start;
+}
+
+.listing-head {
+  margin-bottom: 20px;
+  padding-top: 10px;
+}
+
+.listing-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: #1f1741;
+}
+
+.listing-count {
+  margin: 0 10px 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.listing-map {
+  position: sticky;
+  top: 110px;
+  height: calc(100vh - 150px);
+}
+
+.results-map {
+  position: relative;
+  height: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background-color: #f2eefa;
+}
+
+.results-map iframe,
+.results-map-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* --- Google map: price pins and the listing card they open ------------------ */
+.map-pin {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f1741;
+  background-color: #fff;
+  border: 1px solid #e2dcf0;
+  border-radius: 20px;
+  box-shadow: 0 3px 10px rgba(31, 23, 65, 0.22);
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease-in-out,
+    color 0.15s ease-in-out;
+}
+
+.map-pin:hover,
+.map-pin.active {
+  background-color: #8121cf;
+  border-color: #8121cf;
+  color: #fff;
+}
+
+/* The bubble is Google's; the card inside it is ours, so strip its padding. */
+.results-map .gm-style-iw.gm-style-iw-c {
+  padding: 0 !important;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.results-map .gm-style-iw-d {
+  overflow: hidden !important;
+}
+
+.results-map .gm-style-iw-chr {
+  display: none;
+}
+
+.map-card {
+  position: relative;
+  display: block;
+  width: 260px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.map-card-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  color: #1f1741;
+  background-color: #fff;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(31, 23, 65, 0.24);
+}
+
+.map-card-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+
+.map-card-body {
+  padding: 10px 12px 12px;
+}
+
+.map-card-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.map-card-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.map-card-rating .icon {
+  width: 12px;
+  height: 12px;
+  background-color: #f5a623;
+}
+
+.map-card-price {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #8121cf;
+}
+
+.map-card-price small {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.results-map-count,
+.results-map-note {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  font-size: 13px;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(31, 23, 65, 0.18);
+  white-space: nowrap;
+}
+
+.results-map-note .empty-state {
+  padding: 0;
+}
+
+@media (max-width: 1199px) {
+  .listing-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .listing-map {
+    position: static;
+    height: 380px;
+  }
+}
+
+/* --- Listing details --- */
+.service-details-sec {
+  padding: 40px 0 70px;
+}
+.service-details-sec .container {
+  max-width: 1400px;
+}
+
+/* Title left, Share/Save right, the sub-head wrapping under both. */
+.service-details-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.service-details-title {
+  /* Takes the row so Share/Save are pushed to the far edge. */
+  flex: 1 1 auto;
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0;
+}
+
+/* Rating (and the sub-head, where one is used) drop to their own line rather
+   than competing with the title for the first row. */
+.service-details-head > .service-details-subhead,
+.service-details-head > .service-details-rating {
+  flex: 1 1 100%;
+  order: 1;
+}
+
+.service-details-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.service-action {
+  color: #1f1741;
+  background: none;
+  border: none;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease-in-out;
+  display: inline-flex;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.service-action:hover:not(:disabled) {
+  background: #f9f9f9;
+}
+
+.service-action:disabled {
+  opacity: 0.6;
+}
+
+.service-action .icon {
+  width: 18px;
+  height: 18px;
+}
+.service-action .icon-wishlist {
+  width: 20px;
+  height: 20px;
+}
+
+.service-action.is-saved .icon {
+  background-color: #8121cf;
+}
+
+.service-details-subhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  font-size: 14px;
+  color: rgba(31, 23, 65, 0.75);
+}
+
+.service-details-rating,
+.service-details-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.service-details-rating .icon,
+.service-details-location .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.service-details-badge {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8121cf;
+  background-color: #f2e9fc;
+  border-radius: 20px;
+}
+
+.service-details-row {
+  row-gap: 30px;
+}
+
+/* Hero image + 2x2 tile block, as in the design. */
+/* --- Details gallery: one image, or a five-tile mosaic ----------------------
+ *
+ * 1-4 images render as a single full-width photo; a two-photo listing looks
+ * broken in a five-tile grid, and most listings on this API have exactly one.
+ * 5+ switch to the mosaic: 2 stacked | 1 large | 2 stacked.
+ */
+.service-gallery {
+  position: relative;
+  margin-bottom: 40px;
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.service-gallery--mosaic {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 20px;
+  /* height: clamp(320px, 38vw, 460px); */
+  aspect-ratio: 100 / 38;
+}
+
+.gallery-side {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+  min-height: 0;
+}
+
+.gallery-tile {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  line-height: 0;
+}
+
+/* antd wraps each image in its own div; both need to fill the tile. */
+.gallery-tile .ant-image,
+.gallery-tile .ant-image-img {
+  width: 100%;
+  height: 100% !important;
+  display: block;
+}
+
+.gallery-tile .ant-image-img {
+  object-fit: cover;
+  background-color: #f5e7fe;
+  transition: transform 0.35s ease-in-out;
+}
+
+.gallery-tile:hover .ant-image-img {
+  transform: scale(1.04);
+}
+
+/* Single-image listings have no fixed-height grid to inherit from. */
+.gallery-tile--full {
+  aspect-ratio: 100 / 38;
+}
+
+.gallery-tile--main {
+  grid-column: 2;
+}
+
+/* The design's own label replaces antd's default hover mask. */
+.gallery-tile .ant-image-mask {
+  background-color: rgba(15, 11, 31, 0.35);
+}
+
+.gallery-mask {
+  font-size: 16px;
+  font-weight: 400;
+  color: #fff;
+}
+
+.gallery-hidden {
+  display: none;
+}
+
+.gallery-show-all {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f1741;
+  background-color: #fff;
+  border-radius: 48px;
+  box-shadow: 0px 3px 16px 0px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s ease-in-out;
+}
+
+.gallery-show-all:hover {
+  background-color: #8121cf;
+  color: #fff;
+}
+
+.gallery-show-all .icon {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 767px) {
+  /* Five tiles at phone width are thumbnails; fall back to the single image. */
+  .service-gallery--mosaic {
+    display: block;
+    height: auto;
+  }
+
+  .service-gallery--mosaic .gallery-side {
+    display: none;
+  }
+
+  .service-gallery--mosaic .gallery-tile--main {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+.service-block:not(:last-child) {
+  border-bottom: 1px solid #d1d1d1;
+  padding-bottom: 30px;
+  margin-bottom: 30px;
+}
+
+@media (min-width: 992px) {
+  .service-details-row {
+    margin: 0 -30px;
+  }
+  .service-details-row .col-lg-7 {
+    width: 60%;
+    padding: 0 30px;
+  }
+  .service-details-row .col-lg-5 {
+    width: 40%;
+    padding: 0 30px;
+  }
+}
+/* --- Price breakup cards --- */
+.price-breakup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.price-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 12px;
+  background-color: #faf5ff;
+  border: 1px solid #d1d1d1;
+  border-radius: 8px;
+  width: calc(33.33% - 11px);
+}
+
+.price-card-icon .icon {
+  width: 30px;
+  height: 30px;
+  background-color: #8121cf;
+}
+
+.price-card-body {
+  min-width: 0;
+}
+
+.price-card-label {
+  display: block;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.7);
+  margin-bottom: 2px;
+}
+
+.price-card-amount {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+.price-card-amount small {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.5);
+  margin-left: 4px;
+}
+
+.service-block-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 15px;
+}
+.service-attributes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+}
+
+.service-attribute {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.service-attribute dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f1741;
+}
+.service-attr-icon {
+  width: 38px;
+  height: 38px;
+  background-color: #faf5ff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+}
+.service-attribute .service-attr-icon .icon {
+  width: 23px;
+  height: 23px;
+  flex: 0 0 auto;
+  background-color: #8121cf;
+}
+
+/* The value lines up under the label's text, not under its icon. */
+.service-attribute dd {
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.service-attribute dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.service-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.service-features li {
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  display: flex;
+  font-weight: 500;
+  width: calc(50% - 10px);
+}
+.service-features li img {
+  width: 30px;
+}
+
+.service-faqs dt {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+.service-faqs dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: rgba(31, 23, 65, 0.75);
+}
+.service-booking-column {
+  position: sticky;
+  top: 120px;
+}
+.service-booking-card {
+  background-color: #ffffff;
+  padding: 30px;
+  border: 1px solid #ebe7e7;
+  border-radius: 24px;
+  box-shadow: 0px 2px 10px 0px #00000014;
+}
+.booking-price-row strong {
+  font-size: 18px;
+  font-weight: 600 !important;
+  color: #1f1741;
+  letter-spacing: -0.5px;
+}
+.booking-price-row span {
+  color: rgba(31, 23, 65, 0.7);
+  font-size: 15px;
+}
+
+.booking-price-row .ant-spin span {
+  color: #8121cf;
+}
+
+.booking-disclaimer {
+  text-align: center;
+  font-size: 14px;
+  color: #1f1741;
+  margin-top: 15px;
+}
+
+.service-booking-price {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.service-booking-price small {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.service-booking-meta {
+  margin-bottom: 20px;
+}
+
+.service-booking-meta li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #f2eefa;
+}
+
+.service-booking-meta li:last-child {
+  border-bottom: none;
+}
+
+.service-booking-meta span {
+  color: rgba(31, 23, 65, 0.65);
+}
+
+.service-seller {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.service-seller-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #f2e9fc;
+}
+
+.service-seller-name {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.service-seller-rating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: rgba(31, 23, 65, 0.65);
+}
+
+.service-seller-rating .icon {
+  width: 14px;
+  height: 14px;
+  background: #8121cf;
+}
+
+@media (max-width: 991px) {
+  .service-booking-card {
+    position: static;
+  }
+}
+
+@media (max-width: 575px) {
+  .service-details-title {
+    font-size: 21px;
+    line-height: 1.4;
+  }
+
+  .service-attributes {
+    grid-template-columns: 1fr;
+  }
+
+  .listing-filter,
+  .listing-filter--narrow {
+    flex: 1 1 100%;
+  }
+
+  .booking-fields .booking-field-value {
+    font-size: 14px;
+  }
+  .booking-fields .booking-field-label {
+    font-size: 13px;
+  }
+  .booking-fields {
+    border-radius: 12px;
+    margin-bottom: 15px;
+  }
+  .booking-fields .booking-field-trigger {
+    padding: 9px 10px;
+  }
+  .booking-price-row {
+    margin-bottom: 10px;
+  }
+}
+
+/* --- Pagination --- */
+.product-pagination {
+  margin-top: 10px;
+}
+
+.product-pagination .pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.product-pagination .page-link {
+  display: block;
+  min-width: 30px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(31, 23, 65, 0.6);
+  background-color: none;
+  border: none;
+  border-radius: 30px;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
+  line-height: 30px;
+  margin: 0 5px;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.product-pagination .page-link:hover:not(:disabled):not(.active) {
+  border-color: #8121cf;
+  color: #8121cf;
+}
+
+.product-pagination .page-link.active {
+  background-color: #8121cf;
+  border-color: #8121cf;
+  color: #fff;
+}
+
+.product-pagination .page-link:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.product-pagination .page-item--gap .page-link {
+  border-color: transparent;
+  background: none;
+  min-width: auto;
+  padding: 9px 4px;
+}
+
+.product-pagination .page-item--arrow .page-link {
+  background-color: #f3e8ff;
+  border-radius: 50%;
+  color: #8121cf;
+}
+.product-pagination li:not(.page-item--gap) .page-link:hover:not(:disabled):not(.active) {
+  background-color: #8121cf;
+  color: #fff;
+}
+.product-pagination .page-item--arrow .page-link i {
+  width: 12px;
+  height: 12px;
+}
+
+@media (max-width: 991px) {
+  .my-account-tabing {
+    display: none;
+    margin-top: 10px;
+  }
+
+  .my-account-tabing.show {
+    display: block;
+  }
+
+  .my-account-details {
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 575px) {
+  .account-details-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-row--rail {
+    scroll-behavior: auto;
+  }
+}
+
+/* Non-interactive prev/next on the link-based pager. */
+.product-pagination .page-link.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ─── Category strip (Swiper) ──────────────────────────────────────────────
+   style.css styles `.radio-section` as a flex row; Swiper needs the flexing to
+   happen on `.swiper-wrapper` instead, and spacing comes from spaceBetween. */
+.form-category-section .radio-section.swiper {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0;
+}
+
+.form-category-section .radio-section .swiper-wrapper {
+  align-items: center;
+}
+
+/* The chip sizes the slide — this is what makes slidesPerView="auto" work. */
+.form-category-section .radio-section .swiper-slide {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.form-category-section > button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* --- Booking confirmed (src/app/booking-confirmed/page.jsx) ------------------
+   The receipt after a gateway has taken the money and `checkoutOrder` has
+   recorded the booking. Centred and narrow: there is one message here and
+   nothing to compare it against. */
+.booking-done-sec {
+  padding: 60px 0 90px;
+}
+
+.booking-done {
+  max-width: 620px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.booking-done-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 22px;
+  color: #fff;
+  /* Green rather than the brand purple — this reports an outcome, and success has
+     its own colour everywhere else in the app. */
+  background: linear-gradient(180deg, #34d058 0%, #17ab3e 100%);
+  border-radius: 22px;
+}
+
+.booking-done-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.booking-done-eyebrow {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #17ab3e;
+}
+
+.booking-done-title {
+  margin: 0 0 14px;
+  font-size: 34px;
+  font-weight: 700;
+  color: #1f1741;
+}
+
+.booking-done-note {
+  margin: 0 auto;
+  max-width: 520px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.booking-done-order {
+  margin: 18px 0 0;
+  font-size: 14px;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+.booking-done-order strong {
+  color: #1f1741;
+}
+
+.booking-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+@media (max-width: 575.98px) {
+  .booking-done-title {
+    font-size: 26px;
+  }
+
+  /* Stacked full-width, so neither action is a thumb-stretch on a phone. */
+  .booking-done-actions .btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* The signed-in visitor's own photo in place of the account glyph. Sized to the
+   glyph it replaces (26px) so the header bar does not shift on sign-in. */
+.header-right-avatar {
+  display: block;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  /* Avatars arrive at whatever aspect the uploader had; crop rather than squash. */
+  object-fit: cover;
+  background-color: #f3e8ff;
+}
+
+/* PayPal's own buttons, rendered but inert until the terms are accepted and the
+   booking is payable. Kept in the DOM rather than swapped for a message so the
+   control does not appear under the pointer the moment the form becomes valid. */
+.checkout-paypal-gate {
+  transition: opacity 0.15s ease-in-out;
+}
+
+.checkout-paypal-gate.is-disabled {
+  /* Both, deliberately: `pointer-events` stops the click reaching PayPal's iframe,
+     and the opacity is what tells the visitor why nothing happened. */
+  pointer-events: none;
+  opacity: 0.45;
+}

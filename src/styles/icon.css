@@ -1,0 +1,360 @@
+.icon {
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  display: inline-block;
+  vertical-align: middle;
+  background-color: currentColor;
+  width: 24px;
+  height: 24px;
+  transition: all 0.4s ease-in-out;
+}
+
+.icon-facebook {
+  mask-image: url(/images/svg/facebook.svg);
+}
+
+.icon-instagram {
+  mask-image: url(/images/svg/instagram.svg);
+}
+
+.icon-twitter {
+  mask-image: url(/images/svg/twitter.svg);
+}
+
+.icon-tiktok {
+  mask-image: url(/images/svg/tiktok.svg);
+}
+
+.icon-linkedin {
+  mask-image: url(/images/svg/linkedin.svg);
+}
+
+.icon-youtube {
+  mask-image: url(/images/svg/youtube.svg);
+}
+
+.icon-account {
+  mask-image: url(/images/svg/account.svg);
+}
+
+.icon-cart {
+  mask-image: url(/images/svg/cart.svg);
+}
+
+.icon-close {
+  mask-image: url(/images/svg/close.svg);
+}
+
+.icon-search {
+  mask-image: url(/images/svg/search.svg);
+}
+
+.icon-menu {
+  mask-image: url(/images/svg/menu.svg);
+}
+
+.icon-down-arrow {
+  mask-image: url(/images/svg/down-arrow.svg);
+}
+
+.icon-heart {
+  mask-image: url(/images/svg/heart.svg);
+}
+
+.icon-heart-fill {
+  mask-image: url(/images/svg/heart-fill.svg);
+}
+
+.icon-star {
+  mask-image: url(/images/svg/star.svg);
+}
+
+.icon-close2 {
+  mask-image: url(/images/svg/close-2.svg);
+}
+
+.icon-filter {
+  mask-image: url(/images/svg/filter.svg);
+}
+
+.icon-share {
+  mask-image: url(/images/svg/share.svg);
+}
+
+.icon-minus {
+  mask-image: url(/images/svg/minus.svg);
+}
+
+.icon-plus {
+  mask-image: url(/images/svg/plus.svg);
+}
+
+.icon-delete {
+  mask-image: url(/images/svg/delete.svg);
+  background-color: #e92525;
+}
+
+.icon-right {
+  mask-image: url(/images/svg/right.svg);
+}
+
+.icon-wallet {
+  mask-image: url(/images/svg/wallet.svg);
+}
+
+.icon-action {
+  mask-image: url(/images/svg/action.svg);
+}
+
+.icon-hold {
+  mask-image: url(/images/svg/hold.svg);
+}
+
+.icon-payment {
+  mask-image: url(/images/svg/bill.svg);
+}
+
+.icon-cancel {
+  mask-image: url(/images/svg/deduct.svg);
+}
+
+.icon-show {
+  mask-image: url(/images/svg/eye.svg);
+}
+
+.icon-hide {
+  mask-image: url(/images/svg/hide.svg);
+}
+
+.icon-pencil {
+  mask-image: url(/images/svg/pencil.svg);
+}
+
+.icon-pending {
+  mask-image: url(/images/svg/pending.svg);
+}
+
+.icon-delivery {
+  mask-image: url(/images/svg/delivery.svg);
+}
+
+.icon-shipped {
+  mask-image: url(/images/svg/shipped.svg);
+}
+
+.icon-delivered {
+  mask-image: url(/images/svg/delivered.svg);
+}
+
+.icon-upload {
+  mask-image: url(/images/svg/upload.svg);
+}
+
+.icon-link {
+  mask-image: url(/images/svg/link.svg);
+}
+
+.icon-calendar {
+  mask-image: url(/images/svg/calendar.svg);
+}
+
+.icon-refund {
+  mask-image: url(/images/svg/refund.svg);
+}
+
+.icon-deposit {
+  mask-image: url(/images/svg/deposit.svg);
+}
+
+.icon-bouns {
+  mask-image: url(/images/svg/bonus.svg);
+}
+
+.icon-charge {
+  mask-image: url(/images/svg/charge.svg);
+}
+
+.icon-withdrawal {
+  mask-image: url(/images/svg/withdraw.svg);
+}
+
+.icon-subscribed {
+  mask-image: url(/images/svg/subscribed.svg);
+}
+
+.icon-emptycart {
+  mask-image: url(/images/svg/empty-cart.svg);
+}
+
+.icon-my-order {
+  mask-image: url(/images/svg/my-order.svg);
+}
+
+.icon-wishlist {
+  mask-image: url(/images/svg/wishlist.svg);
+}
+.icon-wishlist-fill {
+  mask-image: url(/images/svg/wishlist-fill.svg);
+}
+
+.icon-listed {
+  mask-image: url(/images/svg/listed.svg);
+}
+
+.icon-map {
+  mask-image: url(/images/svg/map.svg);
+}
+
+.icon-logout {
+  mask-image: url(/images/svg/logout.svg);
+}
+
+.icon-attachment {
+  mask-image: url(/images/svg/attachment.svg);
+}
+
+.icon-ordercancel {
+  mask-image: url(/images/svg/ordercancel.svg);
+}
+
+.icon-exchange {
+  mask-image: url(/images/svg/exchange-returned.svg);
+}
+
+.icon-return {
+  mask-image: url(/images/svg/return-approved.svg);
+}
+
+.icon-failed {
+  mask-image: url(/images/svg/delivery-failed.svg);
+}
+
+.icon-refund-returned {
+  mask-image: url(/images/svg/refund-returned-completed.svg);
+}
+
+.icon-arrow-right {
+  mask-image: url(/images/svg/arrow-right.svg);
+}
+
+.icon-chevron-left {
+  mask-image: url(/images/svg/chevron-left.svg);
+}
+.icon-chevron-right {
+  mask-image: url(/images/svg/chevron-right.svg);
+}
+
+.icon-chevron-down {
+  mask-image: url(/images/svg/chevron-down.svg);
+}
+
+.icon-chevron-up {
+  mask-image: url(/images/svg/chevron-up.svg);
+}
+
+.icon-easyreturn {
+  mask-image: url(/images/svg/easy-return.svg);
+}
+
+.icon-easyexchange {
+  mask-image: url(/images/svg/free-exchange.svg);
+}
+
+.icon-product-return {
+  mask-image: url(/images/svg/product-return.svg);
+}
+
+.icon-declined {
+  mask-image: url(/images/svg/declined.svg);
+}
+
+.icon-payment-n {
+  mask-image: url(/images/svg/payment-n.svg);
+}
+
+.icon-refund-2 {
+  mask-image: url(/images/svg/refund-2.svg);
+}
+
+.icon-bath {
+  mask-image: url(/images/svg/bath.svg);
+}
+.icon-room {
+  mask-image: url(/images/svg/room.svg);
+}
+.icon-size {
+  mask-image: url(/images/svg/size.svg);
+}
+
+.icon-fuel-type {
+  mask-image: url(/images/svg/fuel-type.svg);
+  opacity: 0.7;
+}
+.icon-transmission-type {
+  mask-image: url(/images/svg/transmission-type.svg);
+}
+.icon-seat {
+  mask-image: url(/images/svg/seat.svg);
+}
+
+.icon-size-2 {
+  mask-image: url(/images/svg/size-2.svg);
+}
+.icon-grid {
+  mask-image: url(/images/svg/grid.svg);
+}
+
+.icon-furnished {
+  mask-image: url(/images/svg/furnishing.svg);
+}
+.icon-bedroom {
+  mask-image: url(/images/svg/bedroom.svg);
+}
+.icon-bathroom {
+  mask-image: url(/images/svg/bathroom.svg);
+}
+.icon-sqm {
+  mask-image: url(/images/svg/sqm.svg);
+}
+.icon-parking {
+  mask-image: url(/images/svg/parking.svg);
+}
+.icon-check-in {
+  mask-image: url(/images/svg/check-in.svg);
+}
+.icon-check-out {
+  mask-image: url(/images/svg/check-out.svg);
+}
+
+.icon-brand-model {
+  mask-image: url(/images/svg/brand-model.svg);
+}
+.icon-fuel{
+  mask-image: url(/images/svg/fuel.svg);
+}
+
+.icon-transmission{
+  mask-image: url(/images/svg/transmission.svg);
+}
+
+.icon-pick-up{
+  mask-image: url(/images/svg/pick-up.svg);
+}
+
+.icon-drop-off{
+  mask-image: url(/images/svg/drop-off.svg);
+}
+
+
+.icon-availability{
+  mask-image: url(/images/svg/availability.svg);
+}
+
+.icon-cancellation{
+  mask-image: url(/images/svg/cancellation.svg);
+}
+
+.icon-guidelines{
+  mask-image: url(/images/svg/guidelines.svg);
+}

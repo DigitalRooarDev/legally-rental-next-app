@@ -1,0 +1,611 @@
+/**
+ * Responsive layer.
+ *
+ * Every rule in this file sits inside a media query, and it is imported *last* in
+ * `app/layout.jsx`. Both matter: most of what is overridden here is a plain,
+ * unqualified declaration in `style.css` or `app.css`, so an override of equal
+ * specificity only wins by coming later in the cascade. Moving this import above
+ * either of those silently undoes the whole file.
+ *
+ * Breakpoints are Bootstrap 5's, since the markup already leans on `col-*` and
+ * `d-*-*` classes and a second, disagreeing set of breakpoints would fight them:
+ *
+ *   <= 1199.98px   below `xl`  — small laptops, landscape tablets
+ *   <=  991.98px   below `lg`  — tablets; where the `col-lg-*` grid stacks
+ *   <=  767.98px   below `md`  — large phones
+ *   <=  575.98px   below `sm`  — phones
+ *
+ * Two things this file deliberately does not do:
+ *
+ * - Restate a section that already carries its own media queries in `app.css` —
+ *   the gallery mosaic, the listing/map split, the booking card, the my-account
+ *   tabs, the order cards, the auth split. Two files deciding one layout is worse
+ *   than one file deciding it in a less obvious place.
+ * - Target the handover stylesheet's unused classes. `style.css` still carries
+ *   `.common-sec`, `.sec-title`, `.sec-head` and `.header-search` from the static
+ *   mockups and not one of them appears in any component; the live equivalents
+ *   are `.product-section`, `.product-title .section-title`, `.product-head` and
+ *   `.form-input-section-sticky`, which is what is sized below.
+ */
+
+/* ==========================================================================
+   Below xl (<= 1199.98px)
+   ========================================================================== */
+
+@media (max-width: 1199.98px) {
+  /* The pill was capped at a width larger than its container. */
+  .banner-form {
+    max-width: 100%;
+  }
+
+  /* Three cards across leaves each too narrow for the figures inside. */
+  .price-card {
+    width: calc(50% - 7px);
+  }
+
+  .product-section {
+    padding: 70px 0;
+  }
+
+  .product-head {
+    margin-bottom: 34px;
+  }
+}
+
+/* ==========================================================================
+   Below lg (<= 991.98px) — the `col-lg-*` grid stacks here
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+  .header-top {
+    padding: 14px 0;
+  }
+  /* --- Checkout ------------------------------------------------------------
+     `.checkout-row .col-lg-5` is pinned to 450px with no media query of its own,
+     so below this breakpoint Bootstrap stacked the columns while those widths
+     kept them side by side — the left column resolved to `calc(100% - 450px)`,
+     which is negative on anything under 450px wide. */
+  .checkout-row .col-lg-5,
+  .checkout-row .col-lg-7 {
+    width: 100%;
+  }
+
+  .checkout-sec {
+    padding: 28px 0 48px;
+  }
+
+  .checkout-title {
+    font-size: 24px;
+  }
+
+  .checkout-step {
+    padding: 18px;
+  }
+
+  /* --- Hero search -------------------------------------------------------
+     Three 33.33% segments do not fit one row at tablet width. Where and When
+     share the first row; Who takes the second, since the submit button lives
+     inside that segment and a half-width cell would squeeze the two together. */
+  .form-input-section {
+    flex-wrap: wrap;
+    border-radius: 24px;
+  }
+
+  .form-input-section .form-input-group {
+    width: 50%;
+  }
+
+  /* After the rule above, and matched on the same two-class specificity, so
+     source order decides — which is the point. */
+  .form-input-section .form-input-group--last {
+    width: 100%;
+  }
+
+  /* The vertical rules between segments assume a single row; across a wrapped one
+     they land at the left edge of the row below instead of between two cells. */
+  .form-input-section:not(:hover) .form-input-group:not(:first-child)::before,
+  .form-input-section .form-input-group.active:not(:first-child)::before,
+  .form-input-section .form-input-group.active + .form-input-group::before {
+    display: none;
+  }
+
+  /* The dates panel is centred with a transform, so it needs a width it can
+     actually take rather than one it overflows. */
+  .hero-panel--dates {
+    max-width: calc(100vw - 32px);
+    padding: 20px;
+  }
+
+  /* --- Footer ------------------------------------------------------------ */
+  .footer-sec {
+    padding: 40px 0;
+  }
+
+  /* Five 15% columns are unreadable here. Three across, and the logo block —
+     which carries the tagline and the socials — takes its own row. */
+  .footer-col {
+    width: 33.333%;
+    margin-bottom: 24px;
+  }
+
+  /* After `.footer-col`, not before: both classes are on the same element and
+     this one has to win. */
+  .footer-logo-col {
+    width: 100%;
+  }
+
+  .footer-logo-col .cms-con {
+    padding-top: 20px;
+  }
+
+  /* --- Compact header pill ------------------------------------------------
+     Fixed-position, and its three segments plus dividers plus the submit button
+     have nothing to shrink into. Tighten the gaps and let each label give way
+     before the pill itself does. */
+  .form-input-section-sticky {
+    gap: 8px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .form-input-section-sticky > div span {
+    max-width: 120px;
+  }
+
+  /* --- Page sections and type -------------------------------------------- */
+  .product-section {
+    padding: 50px 0;
+  }
+
+  .product-head {
+    margin-bottom: 24px;
+  }
+
+  .product-title .section-title {
+    font-size: 24px;
+  }
+
+  .product-row > .product-col {
+    margin-bottom: 28px;
+  }
+
+  .service-details-sec {
+    padding: 28px 0 48px;
+  }
+
+  .my-account-sec {
+    padding: 32px 0 48px;
+  }
+
+  .empty-state {
+    padding: 60px 0;
+  }
+
+  /* 12.5rem is 200px — the 404 digit alone is wider than a phone. */
+  .empty-state h1 {
+    font-size: 8rem;
+  }
+
+  .form-input-section {
+    background: none;
+    border: none;
+  }
+  .form-input-inner {
+    background: #fefdff;
+    border: 1px solid #e5dbdb;
+    margin-bottom: 15px;
+    border-radius: 15px;
+    padding: 15px 15px 10px;
+  }
+  .form-input-section .form-input-group {
+    width: 100%;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+  .form-input-group--last {
+    display: block;
+    padding: 0;
+  }
+  .form-input-group .form-input {
+    padding: 0;
+  }
+  .form-category-section {
+    padding: 0 0px 20px;
+    gap: 4px;
+  }
+  .form-category-section:before,
+  .form-category-section:after {
+    display: none;
+  }
+
+  .hero-panel {
+    border-radius: 18px;
+  }
+  .hero-panel--dates {
+    top: 60.5%;
+  }
+  .hero-panel--extra {
+    width: 100%;
+    max-width: 100%;
+    right: 0;
+    top: 83%;
+  }
+  .search-places {
+    top: 108%;
+    border-radius: 18px;
+    padding: 10px;
+  }
+  .form-input-section .form-button-group button {
+    width: 100%;
+    border-radius: 12px;
+    font-size: 15px;
+    height: 52px;
+    gap: 7px;
+  }
+  .form-input-section .form-button-group button i {
+    width: 18px;
+    height: 18px;
+  }
+  .form-button-group button span {
+    display: inline;
+  }
+  .form-input-section-sticky > div {
+    display: none;
+  }
+  .form-input-section-sticky {
+    gap: 0;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    left: auto;
+    top: 25px;
+    right: 120px;
+    transform: none !important;
+  }
+
+  .form-input-section-sticky button {
+    background-color: transparent;
+    color: #8121cf;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    mask-size: 30px;
+  }
+
+  body.form-open:after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 11;
+  }
+
+  /* --- Home hero: switched off below lg ------------------------------------
+     The home page keeps its `.full-header` class — it is stamped on the server
+     from the route by `<HeaderShell>`, so viewport width is not something it can
+     answer, and adding or dropping the class in an effect would paint the 300px
+     hero and then collapse it on hydration, on every navigation. Below this
+     breakpoint the class simply stops meaning anything instead: the home page
+     gets the compact bar and the pill, exactly as an inner page does.
+
+     Every rule below mirrors `app.css`'s `.header-main:not(.full-header)` block.
+     If that block changes, this one has to change with it — which is the cost of
+     the no-flash approach, and cheaper than the flash. */
+  .header-main.full-header {
+    height: var(--compact-header-height);
+  }
+
+  .header-main.full-header .header-top {
+    background: linear-gradient(180deg, #ffffff 0%, #f3e8ff 100%);
+  }
+
+  .form-open .header-main.full-header .header-top {
+    background: none;
+  }
+
+  /* Not `display: none` — the hero still has to animate for `form-open`. */
+  .header-main.full-header .banner-section {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-30px);
+  }
+
+  .header-main.full-header .form-input-section-sticky {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* Pill tapped: the hero slides down over the page, as on an inner page. */
+  .form-open .header-main.full-header {
+    position: fixed;
+    height: 300px;
+  }
+
+  .form-open .header-main.full-header .form-input-section-sticky {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-5px);
+  }
+
+  .form-open .header-main.full-header .banner-section {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   Below md (<= 767.98px)
+   ========================================================================== */
+
+@media (max-width: 767.98px) {
+  /* One segment per row: at this width a half-width segment cannot show both its
+     label and its value without truncating one of them. The submit button stays
+     where the markup puts it — right-aligned inside the Who row, which is a
+     sensible place for it once that row is full width. */
+  .form-input-section .form-input-group {
+    width: 100%;
+  }
+
+  .footer-col {
+    width: 50%;
+  }
+
+  .footer-logo-col {
+    width: 100%;
+  }
+
+  /* Stacked, a card can use the full width — two across leaves the amount
+     wrapping under its own label. */
+  .price-card {
+    width: 100%;
+  }
+
+  .price-breakup {
+    gap: 10px;
+  }
+
+  .product-section {
+    padding: 40px 0;
+  }
+
+  .product-card-title,
+  .product-card-price {
+    font-size: 16px;
+  }
+
+  .checkout-title {
+    font-size: 22px;
+  }
+
+  .copyright-footer .cms-con p {
+    text-align: center;
+  }
+
+  .service-block-title {
+    font-size: 17px;
+    margin-bottom: 15px;
+  }
+  .gallery-tile--full {
+    aspect-ratio: 100 / 75;
+  }
+  .service-gallery {
+    border-radius: 22px;
+    margin-bottom: 20px;
+  }
+  .service-block:not(:last-child) {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+  }
+  .service-details-actions {
+    margin-top: 5px;
+    margin-left: -10px;
+  }
+  .service-features li,
+  .service-attribute dt {
+    font-size: 14px;
+  }
+  .service-attribute dd {
+    font-size: 13px;
+  }
+
+  .banner-section {
+    padding-top: 85px;
+  }
+}
+
+/* ==========================================================================
+   Below sm (<= 575.98px) — phones
+   ========================================================================== */
+
+@media (max-width: 575.98px) {
+  p,
+  .policy-row p {
+    font-size: 14px;
+  }
+  .header-top {
+    padding: 14px 0;
+  }
+  /* --- Header ----------------------------------------------------------- */
+  .header-logo img {
+    max-width: 160px;
+  }
+  a.header-right-dropdown {
+    padding: 0;
+  }
+  .header-right-content {
+    display: none;
+  }
+
+  .form-input-section-sticky {
+    right: 60px;
+    top: 21px;
+  }
+
+  .product-card-location {
+    font-size: 13px;
+  }
+
+  /* --- Footer ----------------------------------------------------------- */
+  .footer-sec {
+    padding: 32px 0;
+  }
+
+  .footer-col,
+  .footer-logo-col {
+    width: 100%;
+  }
+
+  .footer-col {
+    margin-bottom: 18px;
+  }
+
+  .footer-title {
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  /* 11px above and below each link is a 40px row — generous on desktop, but it
+     turns a five-item column into a screen and a half on a phone. Still clears
+     the 44px touch target with the line box included. */
+  .footer-col ul li a {
+    padding: 8px 0;
+  }
+
+  .social-media {
+    margin-top: 16px;
+  }
+
+  .social-media a {
+    margin-right: 12px;
+  }
+
+  /* Two 124px badges plus padding exceed a 320px viewport. */
+  .download-app-img-box {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .copyright-footer {
+    padding: 10px 0;
+  }
+
+  /* The label is the first thing to give: the pill has to stay tappable. */
+  .form-input-section-sticky > div span {
+    max-width: 84px;
+  }
+
+  /* --- Page sections and type -------------------------------------------- */
+  .product-section {
+    padding: 32px 0;
+  }
+
+  .product-head {
+    margin-bottom: 18px;
+  }
+
+  .product-title .section-title {
+    font-size: 20px;
+  }
+
+  /* .product-row > .product-col {
+    margin-bottom: 30px;
+    max-width: 290px;
+    width: 100%;
+  } */
+
+  .checkout-title {
+    font-size: 20px;
+  }
+
+  .checkout-step {
+    padding: 16px;
+  }
+
+  .service-details-sec,
+  .my-account-sec {
+    padding: 30px 0;
+  }
+
+  .service-details-head {
+    margin-bottom: 12px;
+    display: block;
+  }
+  .service-details-actions {
+    gap: 0;
+  }
+  .checkout-row {
+    flex-direction: column-reverse;
+  }
+  .checkout-summary {
+    margin-top: 0;
+    margin-bottom: 30px;
+  }
+  .checkout-step-body {
+    padding-top: 0;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .empty-state {
+    padding: 30px 0;
+  }
+
+  .empty-state h1 {
+    font-size: 5.5rem;
+  }
+
+  /* 2.5rem is 40px, which wraps to two lines at this width. */
+  .empty-state h5 {
+    font-size: 1.75rem;
+  }
+
+  .service-features li {
+    width: 100%;
+  }
+  .service-features li img {
+    width: 24px;
+  }
+
+  .service-attributes,
+  .service-features {
+    gap: 15px;
+  }
+  .service-booking-card {
+    padding: 20px;
+  }
+  .service-policy-card {
+    padding: 10px 20px;
+  }
+  .service-booking-column {
+    gap: 30px;
+  }
+  .checkout-methods {
+    display: block;
+  }
+  .checkout-method:not(:last-child) {
+    margin-bottom: 10px;
+  }
+
+  .form-category-section > button {
+    display: none;
+  }
+
+  .hero-panel--dates {
+    top: 55.5%;
+  }
+  .hero-panel--extra {
+    top: 76%;
+  }
+  .form-input-section-sticky button {
+    width: 24px;
+    height: 24px;
+  }
+  .form-input-section-sticky button .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
