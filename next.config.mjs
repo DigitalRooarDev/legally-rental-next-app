@@ -4,10 +4,11 @@ const nextConfig = {
   poweredByHeader: false,
   experimental: {
     serverActions: {
-      // Next defaults this to 1 MB, which silently rejected avatar uploads before
-      // the action ran — phone photos are routinely 2-5 MB. Keep this comfortably
-      // above the 5 MB ceiling enforced in `updateProfileImage`, since multipart
-      // adds overhead on top of the raw file.
+      allowedOrigins: [
+        '54.215.206.197',
+        'legallyng.com',
+        'www.legallyng.com',
+      ],
       bodySizeLimit: '6mb',
     },
   },
