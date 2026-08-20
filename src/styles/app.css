@@ -931,6 +931,23 @@ body {
   color: rgba(31, 23, 65, 0.5);
 }
 
+/* Fees / Discounts. The rule separates the groups rather than boxing each one:
+   the rows still have to read as one continuous bill that totals below. Scoped to
+   the price block because `.checkout-summary-content` is also the dates and guests
+   rows, which are already separated by their own row borders. */
+.checkout-summary-prices .checkout-summary-content + .checkout-summary-content {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid #e4e0ee;
+}
+
+.checkout-summary-section-title {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
 .checkout-summary-total {
   display: flex;
   justify-content: space-between;

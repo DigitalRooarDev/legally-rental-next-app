@@ -850,30 +850,70 @@ export const toOrderDetailViewModel = (order) => {
     order.serviceImageURL ||
     "";
 
-  // A "9 × 10051.25" note only helps when the unit price is real; the API sends
-  // `weekend_price: "0"` alongside a non-zero `weekend_price_total`.
-  const unitNote = (count, unitPrice) => (count && money(unitPrice) ? `${count} × ${unitPrice}` : "");
+  /**
+   * The same grouped breakdown the checkout shows, built from the order record.
+   *
+   * Field names differ from `checkoutOrder`'s — snake_case here, and the deposit
+   * is `depositAmount` in both — so this only translates; `buildPriceBreakdown`
+   * owns the grouping, the labels and the zero-dropping.
+   *
+   * The caution deposit belongs *inside* the breakdown: `grand_total` already
+   * includes it (verified — the rows sum to `grand_total` only once the deposit
+   * is counted), so listing it after the total would read as an extra charge.
+   */
+  const amount = (value) => {
+    const parsed = Number.parseFloat(String(value ?? "").replace(/,/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
 
-  // Only rows the API actually priced; `money()` drops zero and empty values so
-  // the breakdown never shows "Cleaning fee ₦ 0.00".
-  //
-  // The caution deposit belongs *inside* this list: `grand_total` already
-  // includes it (verified — the rows sum to `grand_total` only once the deposit
-  // is counted), so listing it after the total would read as an extra charge.
-  const charges = [
-    { label: "Nightly rate", value: money(order.per_night_total), note: unitNote(order.per_night_day, order.per_night) },
-    { label: "Weekend rate", value: money(order.weekend_price_total), note: unitNote(order.weekend_day, order.weekend_price) },
-    { label: "Cleaning fee", value: money(order.cleaning_fee) },
-    { label: "Pet fee", value: money(order.pet_fee) },
-    { label: "Extra guest fee", value: money(order.extra_guest_fee_price ?? order.extra_guest_fee) },
-    { label: `Service fee${order.service_fee_percentage ? ` (${order.service_fee_percentage}%)` : ""}`, value: money(order.service_fee_amount) },
-    { label: `Insurance${order.insurance_percentage ? ` (${order.insurance_percentage}%)` : ""}`, value: money(order.insurance_amount) },
-    { label: `VAT${order.vat_percentage ? ` (${order.vat_percentage}%)` : ""}`, value: money(order.vat_amount) },
-    { label: "Delivery", value: money(order.totalDeliveryCharge) },
-    { label: "Caution deposit", value: money(order.depositAmount), note: "refundable" },
-    { label: "Discount", value: money(order.discount), isCredit: true },
-    { label: "Paid from wallet", value: money(order.apply_wallet_amount), isCredit: true },
-  ].filter((row) => row.value !== null);
+  const extraGuestFee = amount(order.extra_guest_fee_price ?? order.extra_guest_fee);
+  const extraGuestRate = amount(order.extra_guest_fee);
+
+  const itemisedDiscounts = {
+    weekly: amount(order.weekly_discount),
+    monthly: amount(order.monthly_discount),
+    earlyBird: amount(order.early_bird_discount),
+    lastMinute: amount(order.last_minute_discount),
+    tripLength: amount(order.trip_length_discount),
+  };
+
+  const charges = buildPriceBreakdown({
+    // `booking_price` on newer records; the older aliases are what the same figure
+    // was called before, and one of them is all some bookings carry.
+    rentalTotal: amount(order.booking_price ?? order.total_price ?? order.serviceBasePrice),
+    nightlyTotal: amount(order.per_night_total),
+    weekendTotal: amount(order.weekend_price_total),
+    deposit: amount(order.depositAmount),
+    fees: {
+      serviceFee: amount(order.service_fee_amount),
+      serviceVat: amount(order.vat_amount),
+      cleaningFee: amount(order.cleaning_fee),
+      petFee: amount(order.pet_fee),
+      extraGuestFee,
+      insurance: amount(order.insurance_amount),
+      delivery: amount(order.totalDeliveryCharge),
+    },
+    counts: {
+      pets: Number.parseInt(order.pets, 10) || 0,
+      extraGuests: deriveExtraGuests(
+        extraGuestFee,
+        extraGuestRate,
+        (Number.parseInt(order.nights, 10) || 0) || (Number.parseInt(order.hours, 10) || 0),
+      ),
+    },
+    discounts: {
+      ...itemisedDiscounts,
+      /**
+       * `discount` is the aggregate of the five above. Older records carry only
+       * the aggregate, newer ones only the parts — showing both would deduct
+       * every discount twice, so the itemised figures win when there are any.
+       */
+      other: Object.values(itemisedDiscounts).some((value) => value > 0)
+        ? 0
+        : amount(order.discount),
+    },
+    walletApplied: amount(order.apply_wallet_amount),
+  });
 
   return {
     id: order.id,
@@ -1033,9 +1073,157 @@ export const toPagination = (pagination, fallbackPerPage = 10) => {
 };
 
 /**
+ * How many extra guests a billed extra-guest fee covers.
+ *
+ * The API bills the fee but never says how many guests it was for, and the fee is
+ * charged **per guest per night** — so `extra_guest_fee_price / extra_guest_fee`
+ * gives the *night* count, which is what made a single extra guest on a 4-night
+ * stay read as "4 guests extra". The stay length has to divide out too.
+ *
+ * Returns `0` — no annotation at all — unless the division lands on a whole
+ * number. A rate that turns out to be per stay rather than per night, or a fee
+ * with a component this cannot see, would otherwise print a confidently wrong
+ * count beside a correct figure; saying nothing is the honest failure.
+ *
+ * @param {number} total  `extra_guest_fee_price` — what was actually charged.
+ * @param {number} rate   `extra_guest_fee` — per guest, per night.
+ * @param {number} units  Nights, or hours for an hourly listing.
+ */
+const deriveExtraGuests = (total, rate, units) => {
+  if (!(total > 0) || !(rate > 0) || !(units > 0)) return 0;
+
+  const guests = total / (rate * units);
+  // Tolerance, not exactness: the figures arrive as decimal strings.
+  return Math.abs(guests - Math.round(guests)) < 0.01 && guests >= 1 ? Math.round(guests) : 0;
+};
+
+/**
+ * @typedef {object} PriceLine
+ * @property {string} key
+ * @property {string} label
+ * @property {number} amount    Always positive; `isCredit` decides the sign shown.
+ * @property {string} [note]    Secondary text beside the label ("refundable").
+ * @property {boolean} [isCredit]  Deducted from the total, rendered as `−amount`.
+ * @property {PriceLine[]} [sublines]
+ */
+
+/**
+ * @typedef {object} PriceSection
+ * @property {string} key
+ * @property {string} title  `""` for the opening block, which carries no heading.
+ * @property {PriceLine[]} lines
+ */
+
+/**
+ * Builds the grouped price breakdown: the rental block, then Fees, then Discounts.
+ *
+ * One builder for both screens on purpose. The checkout and the booking detail
+ * page must agree line for line — a visitor who approved a figure at payment and
+ * finds a differently-itemised one on the receipt has no way to tell which is
+ * right, and that mismatch was the whole reason these drifted apart.
+ *
+ * The two endpoints disagree on field names (`serviceFeeAmount` vs
+ * `service_fee_amount`, and so on), so each caller normalises into `source`
+ * rather than this function learning both vocabularies.
+ *
+ * Zero and missing values are dropped, and a section left with no lines is
+ * dropped with them — the breakdown never shows "Cleaning Fee ₦0.00" or a
+ * "Discounts" heading with nothing under it.
+ *
+ * `Rental Amount` is `booking_price`, *not* `rentalFinalAmount`: the latter is
+ * already net of the discounts and the per-stay fees, so using it here would
+ * count both a second time. The sum of every section reconciles to `grandTotal`.
+ *
+ * @param {object} source
+ * @param {number} source.rentalTotal   `booking_price` — the nights, gross.
+ * @param {number} source.nightlyTotal  `per_night_total` — weekday nights, totalled.
+ * @param {number} source.weekendTotal  `weekend_price_total`.
+ * @param {number} source.deposit       Refundable; inside the total, not on top of it.
+ * @param {object} [source.fees]        Absolute amounts, not percentages.
+ * @param {object} [source.counts]      `{pets, extraGuests}` — annotate their fee labels.
+ * @param {object} [source.discounts]   Positive amounts; rendered as credits.
+ * @param {number} [source.walletApplied]
+ * @returns {PriceSection[]}
+ */
+export const buildPriceBreakdown = ({
+  rentalTotal = 0,
+  nightlyTotal = 0,
+  weekendTotal = 0,
+  deposit = 0,
+  fees = {},
+  counts = {},
+  discounts = {},
+  walletApplied = 0,
+}) => {
+  /** Keeps a line only when the API actually priced it. */
+  const line = (key, label, amount, extra = {}) =>
+    amount > 0 ? { key, label, amount, ...extra } : null;
+
+  const rentalLines = [];
+
+  // The API's own figure. Falls back to the two halves only when the record
+  // omits it — a Rental Amount of zero above a priced base and weekend line would
+  // read as a bug in the total rather than a missing field.
+  const rental = rentalTotal > 0 ? rentalTotal : nightlyTotal + weekendTotal;
+  if (rental > 0) {
+    rentalLines.push({
+      key: "rental",
+      label: "Rental Amount",
+      amount: rental,
+      // The split beneath the total, not unit prices: a stay spanning both kinds
+      // of night is quoted at two different rates and the breakdown has to show
+      // which part of the figure came from which.
+      sublines: [
+        line("base", "Service Base Price", nightlyTotal),
+        line("weekend", "Service Weekend Price", weekendTotal),
+      ].filter(Boolean),
+    });
+  }
+
+  const depositLine = line("deposit", "Deposit Amount", deposit, { note: "refundable" });
+  if (depositLine) rentalLines.push(depositLine);
+
+  // Both fees are charged per unit, so the count is what makes the figure
+  // checkable. Placed as the mobile app places them — the pet count in the label,
+  // the guest count as a note under the row — so the two clients read alike.
+  const plural = (count, noun) => `${count} ${noun}${count === 1 ? "" : "s"}`;
+  const petCount = counts.pets > 0 ? ` (${plural(counts.pets, "pet")})` : "";
+  const guestNote = counts.extraGuests > 0 ? `${plural(counts.extraGuests, "guest")} extra` : "";
+
+  const feeLines = [
+    line("fee", "Service Fee", fees.serviceFee ?? 0),
+    line("vat", "Service VAT", fees.serviceVat ?? 0),
+    line("cleaning", "Cleaning Fee", fees.cleaningFee ?? 0),
+    line("pet", `Pet Fee${petCount}`, fees.petFee ?? 0),
+    line("extra-guest", "Extra Guest Fee", fees.extraGuestFee ?? 0, { note: guestNote }),
+    line("insurance", "Insurance", fees.insurance ?? 0),
+    line("delivery", "Delivery", fees.delivery ?? 0),
+  ].filter(Boolean);
+
+  const credit = (key, label, amount) => line(key, label, amount, { isCredit: true });
+
+  const discountLines = [
+    credit("weekly-discount", "Weekly Discount", discounts.weekly ?? 0),
+    credit("monthly-discount", "Monthly Discount", discounts.monthly ?? 0),
+    credit("early-bird-discount", "Early Bird Discount", discounts.earlyBird ?? 0),
+    credit("last-minute-discount", "Last Minute Discount", discounts.lastMinute ?? 0),
+    credit("trip-length-discount", "Trip Length Discount", discounts.tripLength ?? 0),
+    credit("discount", "Discount", discounts.other ?? 0),
+    // Grouped with the discounts because it reads as one — money already held,
+    // coming off what is left to pay. `key: "wallet"` keeps its green styling.
+    credit("wallet", "Paid from wallet", walletApplied),
+  ].filter(Boolean);
+
+  return [
+    { key: "rental", title: "", lines: rentalLines },
+    { key: "fees", title: "Fees", lines: feeLines },
+    { key: "discounts", title: "Discounts", lines: discountLines },
+  ].filter((section) => section.lines.length > 0);
+};
+
+/**
  * @typedef {object} CheckoutQuote
- * @property {Array<{key: string, label: string, amount: number,
- *   sublines?: Array<{key: string, label: string, amount: number}>}>} lines
+ * @property {PriceSection[]} sections
  * @property {number} total       `grandTotal` — what will actually be charged.
  * @property {number} refundable  The deposit, already inside `total`.
  * @property {number} walletApplied
@@ -1054,9 +1242,8 @@ export const toPagination = (pagination, fallbackPerPage = 10) => {
  * but only the server knows the service fee percentage, the VAT rate and how the
  * weekend nights in a range are counted.
  *
- * The shape mirrors the app's Review screen: a rental amount with the base and
- * weekend unit prices beneath it, then deposit, fee and VAT, totalling
- * `grandTotal`.
+ * The shape mirrors the app's Review screen: a rental amount split into its base
+ * and weekend halves, then Fees, then Discounts, totalling `grandTotal`.
  *
  * @param {object} response `checkoutOrder`'s `response` block.
  * @returns {CheckoutQuote|null}
@@ -1069,55 +1256,60 @@ export const toCheckoutQuote = (response) => {
     return Number.isFinite(parsed) ? parsed : 0;
   };
 
-  const lines = [];
-
-  const rental = num(response.rentalFinalAmount);
-  if (rental > 0) {
-    // Unit prices, not totals — what one night costs on a weekday and at a
-    // weekend. Only shown when the stay actually spans that kind of night.
-    const sublines = [
-      num(response.per_night_day) > 0
-        ? { key: "base", label: "Service Base Price", amount: num(response.per_night) }
-        : null,
-      num(response.weekend_day) > 0
-        ? { key: "weekend", label: "Service Weekend Price", amount: num(response.weekend_price) }
-        : null,
-    ].filter(Boolean);
-
-    lines.push({ key: "rental", label: "Rental Amount", amount: rental, sublines });
-  }
-
+  const rentalTotal = num(response.booking_price);
+  const nightlyTotal = num(response.per_night_total);
+  const weekendTotal = num(response.weekend_price_total);
   const deposit = num(response.depositAmount);
-  if (deposit > 0) lines.push({ key: "deposit", label: "Deposit Amount", amount: deposit });
-
-  const fee = num(response.serviceFeeAmount);
-  if (fee > 0) lines.push({ key: "fee", label: "Service Fee", amount: fee });
-
-  const insurance = num(response.insuranceAmount);
-  if (insurance > 0) lines.push({ key: "insurance", label: "Insurance", amount: insurance });
-
-  const vat = num(response.vatAmount);
-  if (vat > 0) lines.push({ key: "vat", label: "Service VAT", amount: vat });
-
   const walletApplied = num(response.applyWalletAmount);
-  if (walletApplied > 0) {
-    // Negative on purpose: it is money already held, deducted from the total.
-    lines.push({ key: "wallet", label: "Paid from wallet", amount: -walletApplied });
-  }
+  const extraGuestFee = num(response.extra_guest_fee_price);
+  const extraGuestRate = num(response.extra_guest_fee);
+
+  const sections = buildPriceBreakdown({
+    rentalTotal,
+    nightlyTotal,
+    weekendTotal,
+    deposit,
+    fees: {
+      serviceFee: num(response.serviceFeeAmount),
+      serviceVat: num(response.vatAmount),
+      cleaningFee: num(response.cleaning_fee),
+      petFee: num(response.pet_fee),
+      extraGuestFee,
+      insurance: num(response.insuranceAmount),
+    },
+    counts: {
+      pets: Number.parseInt(response.pets, 10) || 0,
+      // An hourly listing has no nights, and there the fee is charged by the hour.
+      extraGuests: deriveExtraGuests(
+        extraGuestFee,
+        extraGuestRate,
+        (Number.parseInt(response.nights, 10) || 0) || (Number.parseInt(response.hours, 10) || 0),
+      ),
+    },
+    discounts: {
+      weekly: num(response.weekly_discount),
+      monthly: num(response.monthly_discount),
+      earlyBird: num(response.early_bird_discount),
+      lastMinute: num(response.last_minute_discount),
+      tripLength: num(response.trip_length_discount),
+    },
+    walletApplied,
+  });
 
   return {
-    lines,
+    sections,
     total: num(response.grandTotal),
     /**
-     * The rental line on its own — what the booking itself costs, before the
-     * refundable deposit, the service fee and VAT are added.
+     * What the nights themselves cost — `booking_price`, before the deposit, the
+     * fees and the discounts land. The same figure the breakdown heads with, so
+     * the listing card and the checkout cannot quote the booking differently.
      *
      * Exposed separately because the listing card quotes the booking, not the
      * bill: a headline figure carrying a deposit the visitor gets back and a fee
      * they have not reached yet reads as the listing being dearer than it is.
      * `grandTotal` stays the number the checkout settles on.
      */
-    rentalAmount: rental,
+    rentalAmount: rentalTotal > 0 ? rentalTotal : nightlyTotal + weekendTotal,
     /**
      * Naira per one US dollar, for the PayPal option — PayPal settles in USD while
      * every figure here is in naira.

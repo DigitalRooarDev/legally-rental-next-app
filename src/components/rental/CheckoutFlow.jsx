@@ -94,23 +94,39 @@ export const buildQuote = (service, from, to, hours = 0) => {
   const units = service.isHourly ? hours : nights;
   const unit = service.isHourly ? 'hour' : 'night';
 
-  const lines = [];
+  const rentalLines = [];
 
   if (units > 0 && rate > 0) {
-    lines.push({
+    rentalLines.push({
       key: 'rate',
       label: `${money(rate)} × ${units} ${unit}${units === 1 ? '' : 's'}`,
       amount: rate * units,
     });
   }
 
-  (service.booking?.fees ?? []).forEach((fee) => {
-    lines.push({ key: fee.key, label: fee.label, amount: toNumber(fee.amount) });
-  });
-
   if (refundable > 0) {
-    lines.push({ key: 'deposit', label: 'Refundable Security Deposit', amount: refundable });
+    rentalLines.push({
+      key: 'deposit',
+      label: 'Deposit Amount',
+      amount: refundable,
+      note: 'refundable',
+    });
   }
+
+  // The listing's own per-stay fees (cleaning, pet, extra guest). Grouped under
+  // "Fees" to match the shape `toCheckoutQuote` returns, so `<CheckoutSummary />`
+  // renders one structure and the panel does not reflow when the real quote
+  // replaces this estimate on sign-in.
+  const feeLines = (service.booking?.fees ?? []).map((fee) => ({
+    key: fee.key,
+    label: fee.label,
+    amount: toNumber(fee.amount),
+  }));
+
+  const sections = [
+    { key: 'rental', title: '', lines: rentalLines },
+    { key: 'fees', title: 'Fees', lines: feeLines },
+  ].filter((section) => section.lines.length > 0);
 
   const start = toDayjs(from);
   const end = toDayjs(to);
@@ -120,9 +136,12 @@ export const buildQuote = (service, from, to, hours = 0) => {
     hours: service.isHourly ? hours : 0,
     /** "1 week" / "7 nights" — the span said in the unit the listing is sold by. */
     lengthLabel: formatBookingLength({ nights, hours, length: resolveBookingLength(service) }),
-    lines,
+    sections,
     refundable,
-    total: lines.reduce((sum, line) => sum + line.amount, 0),
+    total: sections.reduce(
+      (sum, section) => sum + section.lines.reduce((acc, line) => acc + line.amount, 0),
+      0,
+    ),
     dateLabel: formatDateSpan(start, end),
   };
 };

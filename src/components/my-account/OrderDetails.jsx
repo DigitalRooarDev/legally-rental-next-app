@@ -29,8 +29,6 @@ const Money = ({ value }) => (
  *   page: the dates, the price and the host are all still worth reading.
  */
 export default function OrderDetails({ order, timeline = [] }) {
-  console.log(order);
-  
   const deposit = formatPrice(order.depositAmount);
   const hasDeposit = Number.parseFloat(deposit.base) > 0;
 
@@ -236,29 +234,48 @@ export default function OrderDetails({ order, timeline = [] }) {
             <aside className="checkout-summary">
               <div className="checkout-summary-prices pt-0 border-top-0">
                 <div className="checkout-summary-label">Price details</div>
-                <div className="checkout-summary-content">
-                  <ul>
-                    {order.charges.map((charge) => (
-                      <li key={charge.label}>
-                        <span>
-                          {charge.label}
-                          {charge.note ? (
-                            <small className="charge-note"> {charge.note}</small>
+                {/* The same grouped shape the checkout shows — rental block, then
+                    Fees, then Discounts. A receipt itemised differently from the
+                    screen the visitor approved gives them no way to reconcile the
+                    two, so both render `buildPriceBreakdown`'s output verbatim. */}
+                {order.charges.map((section) => (
+                  <div className="checkout-summary-content" key={section.key}>
+                    {section.title ? (
+                      <div className="checkout-summary-section-title">{section.title}</div>
+                    ) : null}
+                    <ul>
+                      {section.lines.map((line) => (
+                        <li key={line.key} className={line.key}>
+                          <span>
+                            {line.label}
+                            {line.note ? <small className="charge-note"> {line.note}</small> : null}
+                          </span>
+                          {/* The class goes on the amount, not the row: it is the
+                              figure that reads as a credit, and colouring the label
+                              green with it would say the line item is one. */}
+                          <span
+                            className={`checkout-summary-amount ${line.isCredit ? 'charge-credit' : ''}`}
+                          >
+                            {line.isCredit ? '−' : ''}
+                            <Money value={line.amount} />
+                          </span>
+                          {line.sublines?.length ? (
+                            <ul className="checkout-summary-sublines">
+                              {line.sublines.map((subline) => (
+                                <li key={subline.key}>
+                                  <span>{subline.label}</span>
+                                  <span className="checkout-summary-amount">
+                                    <Money value={subline.amount} />
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
                           ) : null}
-                        </span>
-                        {/* The class goes on the amount, not the row: it is the
-                            figure that reads as a credit, and colouring the label
-                            green with it would say the line item is one. */}
-                        <span
-                          className={`checkout-summary-amount ${charge.isCredit ? 'charge-credit' : ''}`}
-                        >
-                          {charge.isCredit ? '−' : ''}
-                          <Money value={charge.value} />
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
 
                 <div className="checkout-summary-total">
                   <strong>Total paid</strong>

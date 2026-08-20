@@ -22,7 +22,7 @@ const money = (value) =>
  *
  * @param {object} props
  * @param {import('@/utils/mappers').ServiceDetailViewModel} props.service
- * @param {object} props.quote  From `buildQuote` — nights, lines, total.
+ * @param {object} props.quote  From `buildQuote` — nights, sections, total.
  * @param {object} props.party    Adults/children/infants/pets — stays only.
  * @param {boolean} props.takesGuests  Whether a guest party applies at all.
  * @param {string} props.dateLabel  "21–23 Aug 2026", or `''` when unchosen.
@@ -140,26 +140,46 @@ export default function CheckoutSummary({
 
       <div className={`checkout-summary-prices ${isPricing ? 'is-pricing' : ''}`}>
         <div className="checkout-summary-label">Price details</div>
-        <div className="checkout-summary-content">
-          <ul>
-            {quote.lines.map((line) => (
-              <li key={line.key} className={line.key}>
-                <span>{line.label}</span>
-                <span className="checkout-summary-amount">{money(line.amount)}</span>
-                {line.sublines?.length ? (
-                  <ul className="checkout-summary-sublines">
-                    {line.sublines.map((subline) => (
-                      <li key={subline.key}>
-                        <span>{subline.label}</span>
-                        <span className="checkout-summary-amount">{money(subline.amount)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* Grouped — the rental block, then Fees, then Discounts — and the same
+            groups the booking detail page shows, so the breakdown a visitor
+            approves here is the one they get back on the receipt. Sections with
+            nothing to show are already dropped by `buildPriceBreakdown`, which is
+            why the heading can be rendered unconditionally. */}
+        {quote.sections.map((section) => (
+          <div className="checkout-summary-content" key={section.key}>
+            {section.title ? (
+              <div className="checkout-summary-section-title">{section.title}</div>
+            ) : null}
+            <ul>
+              {section.lines.map((line) => (
+                <li key={line.key} className={line.key}>
+                  <span>
+                    {line.label}
+                    {line.note ? <small className="charge-note"> {line.note}</small> : null}
+                  </span>
+                  {/* The class goes on the amount, not the row: it is the figure
+                      that reads as a credit. */}
+                  <span
+                    className={`checkout-summary-amount ${line.isCredit ? 'charge-credit' : ''}`}
+                  >
+                    {line.isCredit ? '−' : ''}
+                    {money(line.amount)}
+                  </span>
+                  {line.sublines?.length ? (
+                    <ul className="checkout-summary-sublines">
+                      {line.sublines.map((subline) => (
+                        <li key={subline.key}>
+                          <span>{subline.label}</span>
+                          <span className="checkout-summary-amount">{money(subline.amount)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
 
         <div className="checkout-summary-total">
           <strong>Total Price (NGN)</strong>
