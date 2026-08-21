@@ -336,6 +336,9 @@
     pointer-events: auto;
     transform: translateY(0);
   }
+  .my-account-dropdown {
+    display: none;
+  }
 }
 
 /* ==========================================================================
@@ -415,6 +418,10 @@
 
   .banner-section {
     padding-top: 85px;
+  }
+
+  .my-account-details {
+    padding: 14px;
   }
 }
 
@@ -541,6 +548,9 @@
   .checkout-row {
     flex-direction: column-reverse;
   }
+  .my-account-page .checkout-row {
+    flex-direction: inherit;
+  }
   .checkout-summary {
     margin-top: 0;
     margin-bottom: 30px;
@@ -607,5 +617,10 @@
   .form-input-section-sticky button .icon {
     width: 20px;
     height: 20px;
+  }
+
+  .order-card-info,
+  .order-card-img {
+    width: 100%;
   }
 }

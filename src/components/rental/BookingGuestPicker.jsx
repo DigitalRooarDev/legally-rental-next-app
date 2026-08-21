@@ -30,8 +30,17 @@ export const summariseParty = (party = EMPTY_PARTY) => {
  * @param {(next: object) => void} props.onChange
  * @param {number} props.maxGuests    0 when the listing sets no cap.
  * @param {boolean} props.petsAllowed
+ * @param {number} [props.includedGuests] Guests the nightly rate covers.
+ * @param {number} [props.extraGuestFee]  Per extra guest, per night.
  */
-export default function BookingGuestPicker({ value, onChange, maxGuests, petsAllowed }) {
+export default function BookingGuestPicker({
+  value,
+  onChange,
+  maxGuests,
+  petsAllowed,
+  includedGuests = 0,
+  extraGuestFee = 0,
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -59,6 +68,8 @@ export default function BookingGuestPicker({ value, onChange, maxGuests, petsAll
         }}
         maxGuests={maxGuests}
         petsAllowed={petsAllowed}
+        includedGuests={includedGuests}
+        extraGuestFee={extraGuestFee}
       />
     </div>
   );

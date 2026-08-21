@@ -302,6 +302,8 @@ export default function ServiceBookingCard({ service }) {
             onChange={applyParty}
             maxGuests={rules.maxGuests}
             petsAllowed={Boolean(rules.petsAllowed)}
+            includedGuests={rules.includedGuests ?? 0}
+            extraGuestFee={rules.extraGuestFee ?? 0}
           />
         ) : null}
       </div>

@@ -914,11 +914,11 @@ body {
   color: #1f1741;
 }
 
-.checkout-summary-prices li.wallet,
-.checkout-summary-prices li.wallet .checkout-summary-amount {
-  color: #19c319;
-  font-weight: 600;
-  margin-top: 5px;
+.checkout-summary-prices li.wallet span,
+.checkout-summary-prices li.trip-length-discount span,
+.checkout-summary-prices li.early-bird-discount span,
+.checkout-summary-prices li.wallet span {
+  color: #0fa966;
 }
 
 .checkout-summary-sublines {
@@ -1960,7 +1960,10 @@ body {
   font-weight: 500;
   color: #1f1741;
 }
-
+.my-account-dropdown-mob .icon{
+  width: 14px;
+  height: 14px;
+}
 .my-account-tabing .nav-link {
   display: block;
   width: 100%;
@@ -2444,8 +2447,9 @@ body {
 .order-card-placed {
   display: block;
   margin-top: 2px;
-  font-size: 12px;
-  color: rgba(31, 23, 65, 0.6);
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: rgba(31, 23, 65, 0.75);
 }
 
 .order-status {

@@ -1,5 +1,7 @@
 'use client';
 
+import { CURRENCY_SYMBOL } from '@/lib/constants';
+
 /** Infants do not count toward the guest cap, so they carry their own. */
 const MAX_INFANTS = 5;
 const MAX_PETS = 5;
@@ -11,18 +13,61 @@ const ROWS = [
   { key: 'pets', label: 'Pets', hint: '' },
 ];
 
-/** "This place has a maximum of 3 guests, not including infants. Pets aren't allowed." */
-export const partyNote = (maxGuests, petsAllowed) =>
-  [
-    maxGuests > 0
-      ? `This place has a maximum of ${maxGuests} guest${
-          maxGuests === 1 ? '' : 's'
-        }, not including infants.`
-      : '',
+const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+/**
+ * 3000 -> "₦3,000"; 2500.5 -> "₦2,500.50".
+ *
+ * Kobo only when there are kobo — a whole-naira fee reads as a price, not a
+ * calculation, and `.5` on its own reads as a typo.
+ */
+const fee = (amount) =>
+  `${CURRENCY_SYMBOL}${Number(amount).toLocaleString('en-NG', {
+    minimumFractionDigits: Number.isInteger(Number(amount)) ? 0 : 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/**
+ * The sentences under the steppers, in reading order.
+ *
+ * Object argument rather than four positionals: the two counts and the fee are all
+ * numbers, and a transposed pair would print a plausible-looking but wrong cap.
+ *
+ * "This place includes 2 guests, up to a maximum of 10, not including infants.
+ *  Each extra guest is ₦3,000 per night. Pets aren't allowed."
+ *
+ * The included count is only worth a sentence when it is *below* the cap — when
+ * the two are equal there is no extra guest to charge for, so the note falls back
+ * to the cap alone rather than saying the same number twice.
+ *
+ * @param {object} rules
+ * @param {number} rules.maxGuests        0 when the listing sets no cap.
+ * @param {boolean} rules.petsAllowed
+ * @param {number} [rules.includedGuests] Guests the nightly rate already covers.
+ * @param {number} [rules.extraGuestFee]  Per extra guest, per night.
+ */
+export const partyNote = ({ maxGuests, petsAllowed, includedGuests = 0, extraGuestFee = 0 }) => {
+  const hasIncluded = includedGuests > 0 && (maxGuests <= 0 || includedGuests < maxGuests);
+
+  const cap = () => {
+    if (maxGuests <= 0) {
+      return hasIncluded ? `This place includes ${plural(includedGuests, 'guest')}.` : '';
+    }
+
+    return hasIncluded
+      ? `This place includes ${plural(includedGuests, 'guest')}, up to a maximum of ${maxGuests}, not including infants.`
+      : `This place has a maximum of ${plural(maxGuests, 'guest')}, not including infants.`;
+  };
+
+  return [
+    cap(),
+    // Only meaningful once there is a guest the rate does not already cover.
+    hasIncluded && extraGuestFee > 0 ? `Each extra guest is ${fee(extraGuestFee)} per night.` : '',
     petsAllowed ? '' : "Pets aren't allowed.",
   ]
     .filter(Boolean)
     .join(' ');
+};
 
 /**
  * The four stepper rows, on their own.

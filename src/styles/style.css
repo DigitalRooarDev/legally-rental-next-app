@@ -806,7 +806,7 @@ a.header-right-dropdown {
   height: 25px;
   transition: none;
 }
-.form-button-group button span{
+.form-button-group button span {
   display: none;
 }
 .form-category-section {
@@ -993,7 +993,7 @@ a.header-right-dropdown {
 
 /* product-section */
 .product-section {
-  padding: 110px 0;
+  padding: 85px 0;
 }
 
 .product-card-img-box {
@@ -1110,7 +1110,7 @@ a.header-right-dropdown {
 }
 
 .product-head {
-  margin-bottom: 50px;
+  margin-bottom: 35px;
 }
 .product-nav {
   display: flex;
@@ -1162,6 +1162,10 @@ a.header-right-dropdown {
 }
 .product-title .section-title .section-title-link:hover i {
   color: #fff;
+}
+
+.product-section .product-row > .product-col {
+  margin-bottom: 0;
 }
 
 @media (min-width: 1025px) {

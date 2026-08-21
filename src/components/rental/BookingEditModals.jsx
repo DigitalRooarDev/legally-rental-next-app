@@ -128,6 +128,8 @@ function DatesForm({ value, onSave, length, unavailableDates }) {
  * @param {() => void} props.onClose
  * @param {number} props.maxGuests
  * @param {boolean} props.petsAllowed
+ * @param {number} [props.includedGuests] Guests the nightly rate covers.
+ * @param {number} [props.extraGuestFee]  Per extra guest, per night.
  * @param {string} [props.title]
  */
 export function ChangeGuestsModal({
@@ -137,6 +139,8 @@ export function ChangeGuestsModal({
   onClose,
   maxGuests,
   petsAllowed,
+  includedGuests = 0,
+  extraGuestFee = 0,
   title = 'Change guests',
 }) {
   return (
@@ -157,6 +161,8 @@ export function ChangeGuestsModal({
           onClose={onClose}
           maxGuests={maxGuests}
           petsAllowed={petsAllowed}
+          includedGuests={includedGuests}
+          extraGuestFee={extraGuestFee}
         />
       ) : null}
     </Modal>
@@ -164,9 +170,9 @@ export function ChangeGuestsModal({
 }
 
 
-function GuestsForm({ value, onSave, onClose, maxGuests, petsAllowed }) {
+function GuestsForm({ value, onSave, onClose, maxGuests, petsAllowed, includedGuests, extraGuestFee }) {
   const [draft, setDraft] = useState(value);
-  const note = partyNote(maxGuests, petsAllowed);
+  const note = partyNote({ maxGuests, petsAllowed, includedGuests, extraGuestFee });
 
   return (
     <>

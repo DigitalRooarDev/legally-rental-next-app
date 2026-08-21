@@ -652,6 +652,8 @@ export default function CheckoutFlow({
         onSave={(nextParty) => applyEdit(dates, nextParty)}
         maxGuests={service.booking?.maxGuests ?? 0}
         petsAllowed={Boolean(service.booking?.petsAllowed)}
+        includedGuests={service.booking?.includedGuests ?? 0}
+        extraGuestFee={service.booking?.extraGuestFee ?? 0}
       />
     </section>
   );

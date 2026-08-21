@@ -559,6 +559,8 @@ const toAttributeRows = (rentalDetails, rentalType) => {
 /**
  * @typedef {object} BookingRules
  * @property {number} maxGuests       0 when the listing sets no cap.
+ * @property {number} includedGuests  How many guests the nightly rate covers; 0 when unset.
+ * @property {number} extraGuestFee   Per extra guest, per night. 0 when the seller charges none.
  * @property {boolean} takesGuests    Property only — see below.
  * @property {boolean} petsAllowed
  * @property {string} checkIn         "02:00 PM" — display only.
@@ -628,8 +630,23 @@ const toFlag = (value) =>
 const toBookingRules = (rentalDetails, rentalType) => {
   const block = rentalDetails?.[RENTAL_TYPE_BLOCKS[rentalType] ?? ""] ?? {};
   const int = (value) => Number.parseInt(value, 10) || 0;
+  const positive = (value) => {
+    const parsed = Number.parseFloat(String(value ?? "").replace(/,/g, ""));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  };
 
   const maxGuests = int(block.maximum_guests);
+  /**
+   * How many guests the nightly rate already covers, before the extra-guest fee
+   * starts. Clamped to the cap: a seller who typed an "included" larger than their
+   * own maximum would otherwise have the note promise more guests than the
+   * steppers will accept.
+   */
+  const includedGuests = maxGuests > 0
+    ? Math.min(int(block.number_of_guests), maxGuests)
+    : int(block.number_of_guests);
+  /** Per extra guest, per night — the same rate `deriveExtraGuests` divides by. */
+  const extraGuestFee = positive(block.extra_guest_fee);
 
   /**
    * Every house rule as a printable line. Built here rather than in the view so
@@ -655,6 +672,8 @@ const toBookingRules = (rentalDetails, rentalType) => {
 
   return {
     maxGuests,
+    includedGuests,
+    extraGuestFee,
     /**
      * Only a property is booked *per guest*. Every other type — a hall, a car, a
      * dress — is booked as the thing itself, so no party is collected and none is
