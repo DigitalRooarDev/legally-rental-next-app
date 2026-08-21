@@ -4500,3 +4500,23 @@ body {
   pointer-events: none;
   opacity: 0.45;
 }
+
+/* The gate's own status line — "Loading PayPal…", or the failure and its retry.
+   Exempt from the dimming above on purpose: it is the explanation for why there
+   are no buttons, so it has to stay readable, and its retry has to stay clickable,
+   while the terms checkbox is still untouched. */
+.checkout-paypal-gate.is-disabled .checkout-method-note {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.checkout-method-note .btn-link {
+  padding: 0;
+  font: inherit;
+  font-weight: 500;
+  color: #1f1741;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}

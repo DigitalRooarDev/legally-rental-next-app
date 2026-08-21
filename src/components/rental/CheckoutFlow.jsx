@@ -507,7 +507,22 @@ export default function CheckoutFlow({
                           name="payment-method"
                           value={method.value}
                           checked={paymentType === method.value}
-                          onChange={() => setPaymentType(method.value)}
+                          onChange={() => {
+                            setPaymentType(method.value);
+                            /**
+                             * The agreement is to *this* button: "By selecting the
+                             * button, I agree" reads against whichever control is
+                             * about to charge, so switching method withdraws the
+                             * tick rather than carrying it across.
+                             *
+                             * It also re-gates PayPal — its buttons are live the
+                             * moment they are un-dimmed, with no Confirm step in
+                             * between to catch a stale agreement.
+                             */
+                            setAgreed(false);
+                            // A rejection about the old method is not about the new one.
+                            setFieldErrors({});
+                          }}
                         />
                         <span>
                           {method.label}
@@ -548,7 +563,8 @@ export default function CheckoutFlow({
                   {/* PayPal's SDK only charges through buttons it draws itself, so
                       it replaces the shared one rather than sitting beside a
                       Confirm that could not drive it. The terms checkbox still
-                      gates it — the buttons are not rendered until it is ticked. */}
+                      gates it — the buttons are drawn but inert until it is ticked,
+                      and a method change clears the tick, so they re-gate too. */}
                   {isPaypal ? (
                     paypalUsd > 0 ? (
                       /* Shown but inert until the booking is payable and the terms
