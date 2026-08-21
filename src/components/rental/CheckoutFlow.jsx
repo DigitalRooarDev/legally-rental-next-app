@@ -16,7 +16,7 @@ import { toDayjs } from '@/components/theme/DateField';
 import { createOrder } from '@/actions/createOrder';
 import { getCheckoutQuote } from '@/actions/getCheckoutQuote';
 import { useAuth } from '@/context/authContext';
-import { CURRENCY_SYMBOL } from '@/lib/constants';
+import { CURRENCY_SYMBOL, PAYPAL_FEE_PERCENT } from '@/lib/constants';
 
 /**
  * The gateways `createOrder` accepts as `payment_type`.
@@ -42,8 +42,13 @@ const PAYMENT_METHODS = Object.freeze([
     apiValue: PAYMENT_TYPE.PAYPAL,
     label: 'Pay with PayPal',
     hint: 'Pay in USD with your PayPal account.',
-    /** Stated before the visitor commits, not discovered on PayPal's own screen. */
-    note: 'A 1.5% fee charge by Paypal for processing',
+    /**
+     * Stated before the visitor commits, not discovered on PayPal's own screen —
+     * and built from the percentage that is actually charged, so the sentence
+     * cannot claim 1.5% while the arithmetic applies something else.
+     */
+    note: ({ percent, usd }) =>
+      `A ${percent}% fee is charged by PayPal for processing.`,
     /** Settles in dollars, so the naira total is converted at the quote's rate. */
     currency: 'USD',
   },
@@ -83,6 +88,14 @@ const money = (value) =>
  * gets this arithmetic instead. It leaves out everything only the server knows —
  * the discounts, the service fee and the VAT — hence the "estimated total" notice
  * that goes with it.
+ *
+ * The rate and the deposit, and nothing else. The listing's per-stay fees are
+ * deliberately left out even though they are on hand: the server applies them
+ * against the real booking, so listing them here quoted a bill this arithmetic
+ * cannot actually produce — seven fee rows above a total the notice underneath
+ * described as *excluding* fees. Two answers to "what will this cost", of which
+ * only one is the price. The estimate now says the smaller, honest thing and lets
+ * the quote fill in the rest.
  */
 export const buildQuote = (service, from, to, hours = 0) => {
   const nights = nightsBetween(from, to);
@@ -113,20 +126,9 @@ export const buildQuote = (service, from, to, hours = 0) => {
     });
   }
 
-  // The listing's own per-stay fees (cleaning, pet, extra guest). Grouped under
-  // "Fees" to match the shape `toCheckoutQuote` returns, so `<CheckoutSummary />`
-  // renders one structure and the panel does not reflow when the real quote
-  // replaces this estimate on sign-in.
-  const feeLines = (service.booking?.fees ?? []).map((fee) => ({
-    key: fee.key,
-    label: fee.label,
-    amount: toNumber(fee.amount),
-  }));
-
-  const sections = [
-    { key: 'rental', title: '', lines: rentalLines },
-    { key: 'fees', title: 'Fees', lines: feeLines },
-  ].filter((section) => section.lines.length > 0);
+  const sections = [{ key: 'rental', title: '', lines: rentalLines }].filter(
+    (section) => section.lines.length > 0,
+  );
 
   const start = toDayjs(from);
   const end = toDayjs(to);
@@ -307,9 +309,22 @@ export default function CheckoutFlow({
    * API actually sent a rate, which is what stops a guessed rate reaching a real
    * charge: with no rate there is no dollar amount, and PayPal cannot proceed.
    */
+  /**
+   * PayPal's processing percentage: the API's figure when it sends one, the
+   * platform's own rate when it does not.
+   *
+   * The fallback is the fix for a real undercharge. `paypal_charges` is not always
+   * in the response, `num()` reads its absence as `0`, and `toPaypalUsd` reads `0`
+   * as "no fee" — so a ₦82,270.98 booking at ₦1,400/$ was charging $58.76 instead
+   * of $59.64, with the payment step promising 1.5% the whole time. Absent and
+   * "genuinely nothing" are indistinguishable here, so the safe reading of a
+   * missing rate is the stated one, not free.
+   */
+  const paypalPercent = quote.paypalCharges > 0 ? quote.paypalCharges : PAYPAL_FEE_PERCENT;
+
   const paypalUsd =
     selectedMethod?.currency === 'USD'
-      ? toPaypalUsd(quote.total, quote.paypalRate, quote.paypalCharges)
+      ? toPaypalUsd(quote.total, quote.paypalRate, paypalPercent)
       : 0;
 
   /**
@@ -480,8 +495,8 @@ export default function CheckoutFlow({
                         checked={useWallet}
                         onChange={(event) => setUseWallet(event.target.checked)}
                       />
-                      <span class="checkout-wallet-icon">
-                        <i class="icon icon-wallet" aria-hidden="true"></i>
+                      <span className="checkout-wallet-icon">
+                        <i className="icon icon-wallet" aria-hidden="true"></i>
                       </span>
                       <span>
                         Use Wallet Balance
@@ -532,7 +547,9 @@ export default function CheckoutFlow({
                     ))}
                   </div>
                   {selectedMethod?.note ? (
-                    <p className="checkout-method-note">{selectedMethod.note}</p>
+                    <p className="checkout-method-note">
+                      {selectedMethod.note({ percent: paypalPercent, usd: paypalUsd })}
+                    </p>
                   ) : null}
 
                   {fieldErrors.payment_type ? (

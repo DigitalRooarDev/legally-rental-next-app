@@ -75,7 +75,21 @@ export const getCheckoutQuote = async ({
       };
     }
 
-    return { status: true, message: data.message ?? '', quote: toCheckoutQuote(data.response) };
+    const quote = toCheckoutQuote(data.response);
+
+    /**
+     * Said out loud rather than silently absorbed. The checkout falls back to
+     * `PAYPAL_FEE_PERCENT` so a missing rate cannot undercharge, but a fallback
+     * nobody ever sees is how the client's rate and the server's drift apart —
+     * which is the shape of the bug this replaced.
+     */
+    if (quote && quote.paypalRate > 0 && !(quote.paypalCharges > 0)) {
+      console.warn(
+        'CHECKOUT QUOTE: checkoutOrder returned a paypal_rate but no paypal_charges — the client fallback is being used.',
+      );
+    }
+
+    return { status: true, message: data.message ?? '', quote };
   } catch (error) {
     console.error('CHECKOUT QUOTE failed', error);
     return { status: false, message: 'Unable to price this booking right now.', quote: null };

@@ -119,6 +119,21 @@ export const RENTAL_TYPE_OPTIONS = Object.freeze([
 
 export const CURRENCY_SYMBOL = "₦";
 
+/**
+ * PayPal's processing percentage, added on top of the converted dollar amount
+ * rather than absorbed.
+ *
+ * A fallback for `checkoutOrder`'s `paypal_charges`, not a replacement for it: the
+ * API stays the authority whenever it sends a figure. It exists because it does
+ * not always send one, and the previous code read a missing field as **zero
+ * fee** — charging the bare converted amount while the payment step told the
+ * visitor 1.5% applied. A rate that silently disappears is the one case where a
+ * platform-wide rule has to be stated in the client.
+ *
+ * Change this only alongside the server's own rate; the two describe one charge.
+ */
+export const PAYPAL_FEE_PERCENT = 1.5;
+
 /** Tabs rendered by `<MyAccount />` — `id` doubles as the `?tab=` query value. */
 export const MY_ACCOUNT_TABS = Object.freeze([
   { id: "my-bookings", label: "My Bookings" },

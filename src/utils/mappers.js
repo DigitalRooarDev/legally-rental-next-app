@@ -1342,6 +1342,7 @@ export const toCheckoutQuote = (response) => {
      * PayPal's processing percentage, e.g. `1.5`. Added on top of the converted
      * dollar amount rather than absorbed, which is why the payment step states it.
      */
+    
     paypalCharges: num(response.paypal_charges),
     refundable: deposit,
     walletApplied,

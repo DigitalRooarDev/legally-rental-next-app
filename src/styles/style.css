@@ -431,7 +431,7 @@ input[type='number'] {
 
 /* footer */
 .header-main {
-  z-index: 98;
+  z-index: 999;
   width: 100%;
   left: 0;
   top: 0;
