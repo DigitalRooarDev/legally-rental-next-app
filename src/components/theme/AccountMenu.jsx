@@ -52,7 +52,7 @@ export default function AccountMenu() {
             ))}
             <li>
               <button type="button" className="account-dropdown-logout" onClick={logout}>
-                <i className="icon icon-logout" aria-hidden="true" /> Logout
+                Logout
               </button>
             </li>
           </ul>
