@@ -460,9 +460,13 @@ const SHOWS_DETAILS = Object.freeze({
  * reword it without breaking a lookup here.
  *
  * Order matters: "return declined" has to reach the decline test before the
- * return one, or a refusal would be drawn as a completed return.
+ * return one, or a refusal would be drawn as a completed return. Dispute goes
+ * first for the same reason from the other side — "Dispute created" would
+ * otherwise be drawn with the pencil every *created* row gets, and a dispute is
+ * not one more routine step in the booking.
  */
 const TIMELINE_ICONS = Object.freeze([
+  { test: /disput/i, icon: "icon-warning" },
   { test: /reject|declin/i, icon: "icon-declined" },
   { test: /cancel/i, icon: "icon-ordercancel" },
   { test: /refund/i, icon: "icon-refund" },
@@ -481,6 +485,87 @@ const timelineIcon = (type) =>
   TIMELINE_ICONS.find((entry) => entry.test.test(type))?.icon ?? TIMELINE_FALLBACK_ICON;
 
 /**
+ * The dispute card a "Dispute created" entry carries, or `null`.
+ *
+ * `disputeCreated` hangs off the **entry**, not the order, so a booking disputed
+ * twice carries two of them — each with its own reason, description and date. That
+ * is why the card is read per entry rather than from `getOrderDetails`, whose
+ * `disputeOrder` only describes the latest one.
+ *
+ * `dispute_date` arrives already formatted ("2026-08-25 06:49 AM") and is passed
+ * through untouched: re-parsing a display string only to re-print it risks shifting
+ * the time on a date the API has already decided how to say.
+ */
+const toTimelineDispute = (dispute) => {
+  if (!dispute || typeof dispute !== "object" || !dispute.isDispute) return null;
+
+  return {
+    reasonId: String(dispute.order_quality_reason_id ?? ""),
+    reason: dispute.reason || "",
+    description: dispute.description || "",
+    /** Both blank while the dispute is open; filled once an admin rules on it. */
+    adminMessage: dispute.admin_message || "",
+    refundAmount: dispute.refund_amount || "",
+    /** `0` is open. Anything else means an admin has acted. */
+    isResolved: String(dispute.status ?? "0") !== "0",
+    raisedAt: dispute.dispute_date || "",
+  };
+};
+
+/**
+ * The cancellation card an "Order cancel" timeline entry carries, or `null`.
+ *
+ * Sibling of `toTimelineDispute` and read the same way — off the entry, not the
+ * order, because `getOrderDetails` carries only bare `cancelled_date` and
+ * `is_refund` fields and none of the reason, the refund figure or the penalty.
+ *
+ * `rental_order_cancel_reason` is the reason's **text** here, not the id the cancel
+ * request posted under that same name; `message` is the API's own sentence, penalty
+ * percentage and currency included, so it is printed rather than recomposed from
+ * the parts — recomputing a penalty the server has already applied is how two
+ * figures for one refund appear on one screen.
+ */
+const toTimelineCancellation = (cancellation) => {
+  if (!cancellation || typeof cancellation !== "object") return null;
+
+  const cancelledBy = cancellation.cancelled_by || "";
+  const reason = cancellation.rental_order_cancel_reason || "";
+
+  // An entry can carry `orderCancel: {}`; without either of these there is no card
+  // to draw, only an empty red box.
+  if (!cancelledBy && !reason) return null;
+
+  return {
+    /** "Client" | "Seller" — which side ended the booking, and the card's heading. */
+    cancelledBy,
+    reason,
+    description: cancellation.description || "",
+    isRefund: Boolean(cancellation.is_refund),
+    refundAmount: cancellation.refund_amount || "",
+    message: cancellation.message || "",
+    cancelledAt: cancellation.cancelled_date || "",
+  };
+};
+
+/**
+ * The host's reason for refusing the booking, or `null`.
+ *
+ * Third sibling of `toTimelineDispute` and `toTimelineCancellation`, and the
+ * simplest: a refusal is a sentence and a date, with no refund or penalty attached.
+ *
+ * `rejected_desc` is the only part worth a card — without it there is nothing the
+ * row's own title ("Order rejected") does not already say.
+ */
+const toTimelineRejection = (rejection) => {
+  if (!rejection || typeof rejection !== "object") return null;
+
+  const description = rejection.rejected_desc || "";
+  if (!description) return null;
+
+  return { description, rejectedAt: rejection.rejected_date || "" };
+};
+
+/**
  * `orderTimeline` -> the rows the booking page draws down the left of its history.
  *
  * Each entry arrives with the whole booking attached — `serviceDetails`,
@@ -490,13 +575,25 @@ const timelineIcon = (type) =>
  * `getOrderDetails`, and carrying it into the view model would invite two
  * sources of truth for one price.
  *
- * Ordered as the API sends it (oldest first) and deliberately not re-sorted:
+ * Ordered as the API sends it — **newest first**, confirmed against a live
+ * booking (ids 3442, 3427, 3426 descending) — and deliberately not re-sorted:
  * `createdAt` is a string, and sorting strings by hand is how a history ends up
  * claiming a booking completed before it was made.
  *
+ * The direction matters to the view, not just here: the page fills the icon of the
+ * *current* step, which is index 0 under this ordering. An earlier comment here
+ * said "oldest first", and the page marked the last row accordingly — permanently
+ * flagging "Order created" as the live state.
+ *
  * @returns {Array<{id: string, title: string, description: string, status: string,
  *   at: string, icon: string, reason: string,
- *   attachments: Array<{id: string, url: string, name: string}>}>}
+ *   attachments: Array<{id: string, url: string, name: string}>,
+ *   dispute: {reason: string, description: string, adminMessage: string,
+ *     refundAmount: string, isResolved: boolean, raisedAt: string}|null,
+ *   cancellation: {cancelledBy: string, reason: string, description: string,
+ *     isRefund: boolean, refundAmount: string, message: string,
+ *     cancelledAt: string}|null,
+ *   rejection: {description: string, rejectedAt: string}|null}>}
  */
 export const toTimeline = (entries) => {
   if (!Array.isArray(entries)) return [];
@@ -539,6 +636,12 @@ export const toTimeline = (entries) => {
             name: attachment?.attachment || "",
           }))
           .filter((attachment) => attachment.url),
+        /** The amber dispute card, on the entries that raised one. */
+        dispute: toTimelineDispute(entry.disputeCreated),
+        /** The red cancellation card, on the entry that ended the booking. */
+        cancellation: toTimelineCancellation(entry.orderCancel),
+        /** The host's reason, on the entry that refused the booking. */
+        rejection: toTimelineRejection(entry.orderRejected),
       };
     });
 };
@@ -996,10 +1099,200 @@ export const toOrderDetailViewModel = (order) => {
         }
       : null,
 
+    /**
+     * The raw enum beside the label, because two features gate on the *code*, not
+     * the wording: cancellation is offered at `0` only. `null` when the API sends
+     * nothing — deliberately not `0`, which is a real status and would turn an
+     * unknown booking into a cancellable one.
+     */
+    statusCode: Number.isInteger(Number.parseInt(order.status, 10))
+      ? Number.parseInt(order.status, 10)
+      : null,
+    /**
+     * True once the booking starts within 24 hours — the window has **closed**.
+     *
+     * Named after the interval rather than what it permits, which is the API's
+     * choice and reads backwards at every call site, so every reader gets the
+     * reminder: cancelling needs `is24Hours === false`.
+     */
+    is24Hours: Boolean(order.is24Hours),
     isReviewGiven: Boolean(order.isReviewGiven),
+    /** The scores themselves, for reading back — `null` until one is left. */
+    review: toOrderReview(order.orderReviewRating),
     isDispute: Boolean(order.isDispute),
+    /**
+     * Whether the API will accept a dispute for this booking at all.
+     *
+     * The server's own answer — it weighs the booking's stage and its own rules —
+     * so it is read rather than re-derived here. A client that decided this for
+     * itself would offer a button the endpoint then refuses.
+     */
+    isRentalDisputeAvailable: Boolean(order.isRentalDisputeAvailable),
+    /** The dispute already on file, or `null`. */
+    dispute: toOrderDispute(order.disputeOrder),
   };
 };
+
+/**
+ * The review already left for this booking, or `null`.
+ *
+ * Mirrors what `submitReview` posted, back the other way: an overall rating and
+ * comment, then one entry per question answered — its wording, its score, the
+ * suggested answers ticked, and the "Others" text if there was one.
+ *
+ * The questions carry their own wording, so nothing here holds a fixed list to
+ * label them with. That matters now the form is server-defined: a review taken
+ * before a question was reworded reads back in the words it was actually asked in.
+ *
+ * Only questions that were answered come back — one live review returned two of the
+ * four asked — so the list is rendered as given rather than padded out to the
+ * current form.
+ *
+ * `rating` is passed through, not averaged from the per-question scores. It is
+ * `overall_rating` as submitted, which is its own answer and not their mean.
+ *
+ * @returns {{overall: number, comment: string, questions: Array<{id: string,
+ *   question: string, rating: number, comment: string,
+ *   selectedOptions: Array<{id: string, label: string}>}>}|null}
+ */
+const toOrderReview = (review) => {
+  if (!review || typeof review !== "object") return null;
+
+  // `{}` is the API's "no review". `review_id` is what separates a record from it;
+  // the questions are the fallback, in case a response ever omits the id.
+  const hasReview =
+    review.review_id !== undefined ||
+    (Array.isArray(review.questions) && review.questions.length > 0);
+  if (!hasReview) return null;
+
+  const score = (value) => {
+    const parsed = Number.parseFloat(String(value ?? ""));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  };
+
+  return {
+    overall: score(review.rating),
+    comment: review.comment || "",
+    questions: (Array.isArray(review.questions) ? review.questions : [])
+      .filter((question) => question?.question_id !== undefined)
+      .map((question) => ({
+        id: String(question.question_id),
+        question: question.question || "",
+        rating: score(question.rating),
+        /** The "Others" text, blank unless that option was ticked. */
+        comment: question.comment || "",
+        selectedOptions: (Array.isArray(question.selected_options) ? question.selected_options : [])
+          .filter((option) => option?.id !== undefined)
+          .map((option) => ({ id: String(option.id), label: option.option_text || "" }))
+          .filter((option) => option.label),
+      })),
+  };
+};
+
+/**
+ * One raised dispute, or `null` when the booking has none.
+ *
+ * `disputeOrder` arrives as `{}` rather than `null` when nothing is on file, so
+ * the key's presence says nothing and `id` is what separates a record from the
+ * empty placeholder — the same test `toOrderDetailViewModel` applies to an order.
+ */
+const toOrderDispute = (dispute) => {
+  if (!dispute || typeof dispute !== "object" || dispute.id === undefined) return null;
+
+  return {
+    id: dispute.id,
+    reasonId: String(dispute.order_quality_reason_id ?? ""),
+    /**
+     * The reason's wording when the API joins it in. Left blank rather than
+     * guessed from the id: the reason list is a separate call, and a dispute is
+     * readable without its heading but not with the wrong one.
+     */
+    reason: dispute.reason || dispute.orderQualityReason?.reason || "",
+    description: dispute.description || "",
+    raisedAt: dispute.created_at || "",
+  };
+};
+
+/**
+ * `reviewQuestionList` -> the review dialog's whole form.
+ *
+ * The questions, their wording and their suggested answers all live server-side, so
+ * this reads a form rather than validating one against a fixed set: a question added
+ * or reworded there appears here without a deploy, and the count is not assumed —
+ * one order came back with four questions where the payload example showed two.
+ *
+ * `review_to` is carried through from the response rather than taken from the
+ * order's `seller.id`. They agree today, but the endpoint is the one that decides
+ * who a review is *about* — `review_for` can flip the direction — and the submit
+ * has to name whoever this call named.
+ *
+ * @returns {{reviewTo: string, reviewType: string, questions: Array<{id: string,
+ *   question: string, options: Array<{id: string, label: string, isOther: boolean}>}>}|null}
+ */
+export const toReviewForm = (response) => {
+  if (!response || typeof response !== "object") return null;
+
+  const questions = (Array.isArray(response.questions) ? response.questions : [])
+    // Retired questions keep arriving so older reviews stay readable; they are not
+    // asked again.
+    .filter((question) => question?.id !== undefined && String(question.status ?? "1") === "1")
+    .map((question) => ({
+      id: String(question.id),
+      question: question.question || "",
+      /** Blank on every row today; sorted by anyway, so setting it starts working. */
+      sortOrder: Number.parseInt(question.sort_order, 10) || 0,
+      options: (Array.isArray(question.options) ? question.options : [])
+        .filter((option) => option?.id !== undefined)
+        .map((option) => ({
+          id: String(option.id),
+          label: option.option_text || "",
+          /**
+           * "Others" — ticking it opens a free-text box rather than standing as an
+           * answer on its own. Read from the flag, never from the wording: the label
+           * is editable copy, and one question already omits the option entirely.
+           */
+          isOther: Boolean(option.is_other),
+        })),
+    }));
+
+  if (questions.length === 0) return null;
+
+  return {
+    reviewTo: String(response.review_to ?? ""),
+    reviewType: String(response.review_type ?? ""),
+    // `sort` is stable, so equal orders keep the sequence the API sent.
+    questions: questions.sort((left, right) => left.sortOrder - right.sortOrder),
+  };
+};
+
+/** `orderQualityReasonList` -> the dispute dialog's options. */
+export const toDisputeReasons = (reasons) => toReasonOptions(reasons);
+
+/**
+ * `orderCancellationReasonList` -> the cancel dialog's options.
+ *
+ * The request already narrows by `role` and `service_type`, and the rows echo both
+ * back. They are not re-filtered here: doing so would silently empty the picker if
+ * the API ever labelled a row differently from the query that asked for it, and an
+ * empty picker is indistinguishable from "no reasons exist".
+ */
+export const toCancellationReasons = (reasons) => toReasonOptions(reasons);
+
+/**
+ * The `{id, reason, status}` shape both reason endpoints answer with.
+ *
+ * `status` gates each row. A reason is retired by clearing that flag rather than
+ * being deleted — it still arrives, and still has to resolve for older records
+ * citing it — so filtering here keeps a retired reason out of the picker without
+ * making the records that used it unreadable.
+ */
+const toReasonOptions = (reasons) =>
+  (Array.isArray(reasons) ? reasons : [])
+    .filter((reason) => reason?.id !== undefined && String(reason.status ?? "1") === "1")
+    .map((reason) => ({
+      value: String(reason.id),
+      label: reason.reason || `Reason ${reason.id}`,
+    }));
 
 /**
  * Normalises one row from `getaddresses`.

@@ -623,4 +623,9 @@
   .order-card-img {
     width: 100%;
   }
+
+  .review-score{
+    display: block;
+  }
+
 }

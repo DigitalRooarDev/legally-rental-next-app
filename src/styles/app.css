@@ -286,7 +286,6 @@ body {
   font-weight: 500;
   text-decoration: underline;
   font-size: 15px;
-
 }
 
 /* `.header-main` sets `z-index: 9`, which caps everything inside it — including
@@ -608,7 +607,7 @@ body {
 }
 .checkout-wallet-group,
 .checkout-methods--group {
-  border-bottom: 1px solid #c1c1c1;
+  border-bottom: 1px solid #efefef;
   padding-bottom: 20px;
   padding-top: 20px;
 }
@@ -716,7 +715,7 @@ body {
   font-weight: 500 !important;
   color: #1f1741;
   line-height: 1.2;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .checkout-summary-location,
@@ -1960,7 +1959,7 @@ body {
   font-weight: 500;
   color: #1f1741;
 }
-.my-account-dropdown-mob .icon{
+.my-account-dropdown-mob .icon {
   width: 14px;
   height: 14px;
 }
@@ -2602,7 +2601,6 @@ body {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.75);
 }
-
 
 /* --- Wallet ledger (transactionHistory) --- */
 .wallet-txn-list {
@@ -4519,4 +4517,446 @@ body {
   border: none;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* Booking actions: the dispute box under the tracking history. */
+
+.order-action-lead {
+  margin: 5px 0 16px;
+  font-size: 14px;
+  color: #6b6b87;
+}
+
+.order-action-body p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a4a68;
+  margin-top: 0;
+}
+
+/* Destructive, but not this page's primary action: tinted rather than filled, so
+   it reads as available without competing with the buttons around it. */
+.btn.btn-danger-soft {
+  color: #d92d20;
+  background-color: #fef3f2;
+  border: 1px solid #fda29b;
+  font-weight: 600;
+}
+
+.btn.btn-danger-soft:hover,
+.btn.btn-danger-soft:focus-visible {
+  color: #b42318;
+  background-color: #fee4e2;
+  border-color: #f97066;
+}
+
+/* The action that actually ends the booking. Filled, so it does not read like the
+   tinted trigger that only opened this dialog. */
+.btn.btn-danger {
+  color: #fff;
+  background-color: #e01e1e;
+  border: 1px solid #e01e1e;
+  font-weight: 600;
+}
+
+.btn.btn-danger:hover,
+.btn.btn-danger:focus-visible {
+  color: #fff;
+  background-color: #b42318;
+  border-color: #b42318;
+}
+
+/* Shared by both booking dialogs - see `ReasonDialog`. */
+.reason-form .reason-field {
+  display: block;
+  margin-bottom: 18px;
+}
+
+.reason-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+textarea.form-control,
+.reason-form textarea.form-control {
+  min-height: 96px;
+  resize: vertical;
+  border-radius: 15px;
+}
+label.reason-field {
+  width: 100%;
+}
+
+/* Right-aligned under the textarea it counts, not a field of its own. */
+.reason-count {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  text-align: right;
+  color: #8a8aa3;
+}
+
+/* The dispute a timeline entry raised, inset under that entry's own text. Amber
+   rather than red: a raised dispute is an open matter, not a failure, and the row
+   above it already says what happened. */
+/* A note one timeline entry carries — a raised dispute, a cancellation. One box,
+   coloured by which; the inner parts are identical and are not duplicated. */
+.timeline-note {
+  margin: 12px 0 4px;
+  padding: 16px;
+  border: 1px solid;
+  border-radius: 12px;
+}
+
+/* Amber: a raised dispute is an open matter, not a failure. */
+.timeline-note--dispute {
+  background-color: #fffaeb;
+  border-color: #fedf89;
+}
+
+/* Red: a cancellation is settled, and the booking is gone. */
+.timeline-note--cancel {
+  background-color: #fef3f2;
+  border-color: #fecdca;
+}
+
+.timeline-note-head {
+  display: flex;
+  align-items: center;
+  column-gap: 8px;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.timeline-note-head .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.timeline-note--dispute .timeline-note-head {
+  color: #b54708;
+}
+
+.timeline-note--dispute .timeline-note-head .icon {
+  background-color: #dc6803;
+}
+
+.timeline-note--cancel .timeline-note-head {
+  color: #d92d20;
+}
+
+.timeline-note--cancel .timeline-note-head .icon {
+  background-color: #d92d20;
+}
+
+.timeline-note-title {
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f1741;
+}
+
+/* Overrides `.order-tracking ul li p`, which this sits inside. */
+.order-tracking ul li .timeline-note-desc {
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4a4a68;
+}
+
+.order-tracking ul li .content-box {
+  width: 100%;
+}
+
+/* The refund figure, called out above the API's own sentence about it. */
+.timeline-note-amount {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.timeline-note-date {
+  display: block;
+  font-size: 13px;
+  color: #8a8aa3;
+}
+
+/* An admin's ruling, added to a dispute after the fact — ruled off because it
+   arrives later than everything above it. */
+.order-tracking ul li .timeline-note-extra {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4a4a68;
+  border-top: 1px solid #fedf89;
+}
+
+/* Rate Your Rental: the box's own trigger, and the dialog's "Later". */
+.btn.btn-outline-primary {
+  color: #8121cf;
+  background-color: transparent;
+  border: 1px solid #8121cf;
+  font-weight: 600;
+}
+
+.btn.btn-outline-primary:hover,
+.btn.btn-outline-primary:focus-visible {
+  color: #fff;
+  background-color: #8121cf;
+  border-color: #8121cf;
+}
+
+/* Submitting a review is the one green action on the page — nothing is being
+   spent or ended, which every other filled button here does. */
+.btn.btn-success {
+  color: #fff;
+  background-color: #12b76a;
+  border: 1px solid #12b76a;
+  font-weight: 600;
+}
+
+.btn.btn-success:hover,
+.btn.btn-success:focus-visible {
+  color: #fff;
+  background-color: #039855;
+  border-color: #039855;
+}
+
+.review-lead {
+  margin: -8px 0 20px;
+  font-size: 14px;
+  color: #6b6b87;
+}
+
+.review-question {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ececf2;
+}
+
+.review-question-label {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #1f1741;
+}
+
+/* Never the item that gives way — the stars are the control being aimed at. */
+.review-question-head .star-rating {
+  flex: 0 0 auto;
+  margin: 6px 0;
+}
+
+.star-rating {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+}
+
+/* A button per star: each needs its own hit area and focus ring. */
+.star-rating-star {
+  display: inline-flex;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.star-rating-star .icon {
+  width: 20px;
+  height: 20px;
+  background-color: #d5d5e0;
+  transition: background-color 0.12s ease-in-out;
+}
+
+.star-rating-star.is-on .icon {
+  background-color: #f5a623;
+}
+
+.star-rating-star:hover:not(:disabled) .icon {
+  background-color: #f5a623;
+}
+
+.star-rating-star:disabled {
+  cursor: default;
+}
+
+/* The review read back, once one has been left. */
+.review-overall {
+  margin-bottom: 18px;
+}
+
+.review-overall-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.review-overall-score {
+  display: flex;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.review-overall-value {
+  font-size: 14px;
+  color: #6b6b87;
+}
+
+.review-scores {
+  margin: 0;
+}
+
+/* One answered question: its score row, then whatever explains it. */
+.review-answer {
+  padding: 15px 0;
+  border-top: 1px solid #ececf2;
+}
+
+/* Question left, score right, on one line — a table of results, not a form. */
+.review-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 16px;
+  row-gap: 2px;
+}
+
+.review-score-question {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #4a4a68;
+}
+
+.review-score-value {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+  flex: 0 0 auto;
+  font-size: 15px;
+  white-space: nowrap;
+  color: #6b6b87;
+  font-size: 14px;
+}
+
+.review-score-value .icon {
+  width: 18px;
+  height: 18px;
+  background-color: #f5a623;
+}
+
+/* The suggested answers ticked, indented under the question they answer. */
+.review-selected {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.review-selected li {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 5px;
+  color: #6b6b87;
+}
+
+/* The "Others" text on one question — quoted, since it is the visitor's wording
+   rather than one of the options offered. */
+.review-answer-comment {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-style: italic;
+  color: #6b6b87;
+}
+
+/* The visitor's own words, set apart from the scores above them. */
+.review-comment {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a4a68;
+  border-top: 1px solid #ececf2;
+}
+
+/* Read-back rows are plain spans, so they take none of the button affordances. */
+.star-rating span.star-rating-star {
+  padding: 0;
+  cursor: default;
+}
+
+.star-rating span.star-rating-star .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* The review dialog's suggested answers. Taller than the other dialogs, so the
+   body scrolls rather than the page behind it. */
+.review-modal .ant-modal-body {
+  max-height: 85vh;
+  overflow-y: auto;
+  /* Clear of the scrollbar the questions can bring with them. */
+  padding-right: 15px;
+}
+
+/* Full width on a phone, where a fixed 720 would overflow the viewport. */
+@media (max-width: 767px) {
+  .review-modal {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+/* Flush under the question row: the legend belongs to that question, and a gap
+   between them read as a heading for the section rather than for the answer. */
+.review-options {
+  margin: 10px 0 0 0;
+  padding: 0;
+  border: none;
+}
+
+.review-options legend {
+  float: none;
+  width: auto;
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #8a8aa3;
+}
+
+.review-option {
+  display: flex;
+  align-items: flex-start;
+  column-gap: 10px;
+  margin-bottom: 5px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #4a4a68;
+  cursor: pointer;
+}
+
+.review-option input {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: #8121cf;
+}
+
+/* Opened by the question's own "Others" option, so it is indented under it. */
+.review-other {
+  margin-top: 5px;
 }

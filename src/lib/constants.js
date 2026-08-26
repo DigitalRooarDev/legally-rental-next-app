@@ -148,37 +148,48 @@ export const MY_ACCOUNT_TABS = Object.freeze([
  * `orderList` returns a numeric `status` and no label (unlike the ecommerce API,
  * which supplies `statusLabel`).
  *
- * 0-4 are the enum documented in the Postman collection. `5` is not documented,
- * but orders carrying it also carry `rejected_date` / `rejected_desc` with
- * `approval_status: 3`, so it is read as Rejected — confirm before relying on it.
+ * The names describe a booking's **approval lifecycle**, which is what the seller
+ * actually moves an order through: it is raised pending approval, approved or
+ * rejected, runs, and finishes — with cancellation possible along the way. The
+ * earlier reading of this enum ("Active", "Late", "Delivered") described a
+ * delivery instead, and put a badge on a card that no filter here would have
+ * found under that name.
+ *
+ * Deliberately the single source for both the badge and the filter below: a card
+ * reading "Ongoing" has to be the one the Ongoing filter returns, and two lists
+ * of the same six numbers is how those come apart.
  */
 export const ORDER_STATUS_LABELS = Object.freeze({
-  0: "Active",
-  1: "Late",
+  0: "Pending Approval",
+  1: "Approved",
   2: "Cancelled",
-  3: "Delivered",
+  3: "Ongoing",
   4: "Completed",
   5: "Rejected",
 });
 
 /** Applied as `order-status--<tone>`; drives the badge colour. */
 export const ORDER_STATUS_TONES = Object.freeze({
-  0: "info",
-  1: "pending",
+  /** Awaiting the seller — the one state the visitor can only wait on. */
+  0: "pending",
+  1: "success",
   2: "danger",
-  3: "success",
+  /** In progress, not finished: distinct from the green a completed stay earns. */
+  3: "info",
   4: "success",
   5: "danger",
 });
 
-/** `status` filters supported by `orderList`. `''` means every status. */
+/**
+ * `status` filters supported by `orderList`, in lifecycle order.
+ *
+ * `value` is the API's numeric `status`, sent verbatim; `''` means every status.
+ * Labels are read from `ORDER_STATUS_LABELS` rather than repeated, so a rename
+ * lands on the badge and the dropdown together.
+ */
 export const ORDER_STATUS_FILTERS = Object.freeze([
   { value: "", label: "All" },
-  { value: "0", label: "Active" },
-  { value: "1", label: "Late" },
-  { value: "3", label: "Delivered" },
-  { value: "4", label: "Completed" },
-  { value: "2", label: "Cancelled" },
+  ...Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => ({ value, label })),
 ]);
 
 /**

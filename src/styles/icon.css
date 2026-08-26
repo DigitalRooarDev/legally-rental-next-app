@@ -269,6 +269,12 @@
   mask-image: url(/images/svg/declined.svg);
 }
 
+/* The triangle-and-bang the dispute card leads with. Named for the shape, not the
+   one screen the file it points at was first drawn for. */
+.icon-warning {
+  mask-image: url(/images/svg/delete-warning-icon.svg);
+}
+
 .icon-payment-n {
   mask-image: url(/images/svg/payment-n.svg);
 }

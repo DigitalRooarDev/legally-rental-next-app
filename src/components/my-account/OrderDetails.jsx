@@ -1,5 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import OrderCancelBox from '@/components/my-account/OrderCancelBox';
+import OrderDisputeBox from '@/components/my-account/OrderDisputeBox';
+import OrderReviewBox from '@/components/my-account/OrderReviewBox';
 import TimelineAttachments from '@/components/my-account/TimelineAttachments';
 import { CURRENCY_SYMBOL } from '@/lib/constants';
 import {
@@ -39,16 +42,29 @@ export default function OrderDetails({ order, timeline = [] }) {
     order.guests.pets ? `${order.guests.pets} pets` : '',
   ].filter(Boolean);
 
-  // Whichever terminal state applies — at most one is populated.
+  /**
+   * Whichever terminal state applies — at most one is populated.
+   *
+   * Rejection is deliberately absent. `orderTimeline` carries the host's reason on
+   * the "Order rejected" row itself, dated and in sequence, so repeating it in a
+   * banner above the page said the same sentence twice — once without the context
+   * of when it happened.
+   */
   const outcome =
-    (order.rejectedReason && {
-      label: 'Rejected',
-      date: order.rejectedDate,
-      note: order.rejectedReason,
-    }) ||
     (order.cancelledDate && { label: 'Cancelled', date: order.cancelledDate, note: '' }) ||
     (order.completedDate && { label: 'Completed', date: order.completedDate, note: '' }) ||
-    (order.deliveredDate && { label: 'Delivered', date: order.deliveredDate, note: '' }) ||
+    /**
+     * Status 3. `delivered_date` is the API's name for when the booking started,
+     * and the badge above calls that state Ongoing — so this says the same word,
+     * or the page names one state twice. It is also the only entry here that is
+     * not terminal, hence "since" rather than "on".
+     */
+    (order.deliveredDate && {
+      label: 'Ongoing',
+      preposition: 'since',
+      date: order.deliveredDate,
+      note: '',
+    }) ||
     null;
 
   const listingHref = order.serviceId ? `/rental/${order.serviceId}` : '';
@@ -84,7 +100,7 @@ export default function OrderDetails({ order, timeline = [] }) {
           <div className={`order-outcome order-outcome--${order.statusTone}`}>
             <strong>
               {outcome.label}
-              {outcome.date ? ` on ${formatDate(outcome.date)}` : ''}
+              {outcome.date ? ` ${outcome.preposition ?? 'on'} ${formatDate(outcome.date)}` : ''}
             </strong>
             {outcome.note ? <p>{outcome.note}</p> : null}
           </div>
@@ -161,8 +177,11 @@ export default function OrderDetails({ order, timeline = [] }) {
                 <div className="order-history-title">Order Tracking History</div>
                 <div className="order-tracking">
                   <ul>
+                    {/* `orderTimeline` answers newest first, so the current step is
+                        the *first* row — the filled icon used to land on the last
+                        one, which is "Order created" and never the live state. */}
                     {timeline.map((entry, index) => (
-                      <li key={entry.id} className={index === timeline.length - 1 ? 'active' : ''}>
+                      <li key={entry.id} className={index === 0 ? 'active' : ''}>
                         <div className="icon-box">
                           <i className={`icon ${entry.icon}`} aria-hidden="true" />
                         </div>
@@ -182,6 +201,110 @@ export default function OrderDetails({ order, timeline = [] }) {
                               <b>Note:</b> {entry.note}
                             </div>
                           ) : null}
+                          {entry.dispute ? (
+                            <div className="timeline-note timeline-note--dispute">
+                              <div className="timeline-note-head">
+                                <i className="icon icon-warning" aria-hidden="true" />
+                                {entry.dispute.isResolved ? 'Dispute Resolved' : 'Dispute Raised'}
+                              </div>
+
+                              {entry.dispute.reason ? (
+                                <div className="timeline-note-title">{entry.dispute.reason}</div>
+                              ) : null}
+
+                              {entry.dispute.description ? (
+                                <p className="timeline-note-desc">{entry.dispute.description}</p>
+                              ) : null}
+
+                              {/* Already formatted by the API — printed, not reparsed. */}
+                              {entry.dispute.raisedAt ? (
+                                <span className="timeline-note-date">
+                                  Raised on {entry.dispute.raisedAt}
+                                </span>
+                              ) : null}
+
+                              {/* Only once an admin has actually ruled: both fields are
+                                  blank while the dispute is open, and an empty "Admin
+                                  response" heading reads as a reply that failed to
+                                  load. */}
+                              {entry.dispute.adminMessage ? (
+                                <p className="timeline-note-extra">
+                                  <b>Admin response:</b> {entry.dispute.adminMessage}
+                                </p>
+                              ) : null}
+
+                              {Number.parseFloat(entry.dispute.refundAmount) > 0 ? (
+                                <p className="timeline-note-extra">
+                                  <b>Refund:</b> <Money value={entry.dispute.refundAmount} />
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : null}
+
+                          {entry.rejection ? (
+                            <div className="timeline-note timeline-note--cancel">
+                              <div className="timeline-note-head">
+                                <i className="icon icon-declined" aria-hidden="true" />
+                                Order Rejected
+                              </div>
+
+                              <p className="timeline-note-desc">{entry.rejection.description}</p>
+
+                              {entry.rejection.rejectedAt ? (
+                                <span className="timeline-note-date">
+                                  Rejected on {entry.rejection.rejectedAt}
+                                </span>
+                              ) : null}
+                            </div>
+                          ) : null}
+
+                          {entry.cancellation ? (
+                            <div className="timeline-note timeline-note--cancel">
+                              <div className="timeline-note-head">
+                                <i className="icon icon-cancel" aria-hidden="true" />
+                                Cancelled by: {entry.cancellation.cancelledBy || 'Unknown'}
+                              </div>
+
+                              {entry.cancellation.reason ? (
+                                <div className="timeline-note-title">
+                                  {entry.cancellation.reason}
+                                </div>
+                              ) : null}
+
+                              {entry.cancellation.description ? (
+                                <p className="timeline-note-desc">
+                                  {entry.cancellation.description}
+                                </p>
+                              ) : null}
+
+                              {/* Gated on `is_refund` as well as the figure: a policy that
+                                  refunds nothing sends a zero, and "Refund Amount: ₦0.00"
+                                  reads as a payment still to come. */}
+                              {entry.cancellation.isRefund &&
+                              Number.parseFloat(entry.cancellation.refundAmount) > 0 ? (
+                                <span className="timeline-note-amount">
+                                  Refund Amount: <Money value={entry.cancellation.refundAmount} />
+                                </span>
+                              ) : null}
+
+                              {/* The API's own sentence, penalty percentage included. Not
+                                  recomposed from the parts — recomputing a penalty the
+                                  server already applied is how one refund ends up quoted
+                                  two ways on one screen. */}
+                              {entry.cancellation.message ? (
+                                <p className="timeline-note-desc">
+                                  {entry.cancellation.message}
+                                </p>
+                              ) : null}
+
+                              {entry.cancellation.cancelledAt ? (
+                                <span className="timeline-note-date">
+                                  Cancelled on {entry.cancellation.cancelledAt}
+                                </span>
+                              ) : null}
+                            </div>
+                          ) : null}
+
                           <TimelineAttachments attachments={entry.attachments} />
                         </div>
                       </li>
@@ -191,7 +314,27 @@ export default function OrderDetails({ order, timeline = [] }) {
               </div>
             ) : null}
 
-            {order.attributes.length > 0 ? (
+            {/* Directly under the history, where the mobile app puts it: the history
+                is what a visitor reads to decide something has gone wrong, so the
+                action belongs at the end of it rather than below the listing specs.
+                Renders nothing unless the API allows a dispute or one already
+                exists. */}
+            {/* Cancel first, dispute second — the order the app uses, and the order
+                the two apply in: cancelling is only offered before the stay, raising
+                a dispute only really after it. */}
+            <OrderCancelBox order={order} />
+
+            <OrderDisputeBox
+              orderId={order.id}
+              canRaise={order.isRentalDisputeAvailable}
+              dispute={order.dispute}
+            />
+
+            {/* Last of the three: cancelling and disputing act on a live booking,
+                rating one only makes sense once it is over. */}
+            <OrderReviewBox order={order} />
+
+            {/* {order.attributes.length > 0 ? (
               <div className="checkout-step">
                 <h2 className="service-block-title mb-4">Listing details</h2>
                 <dl className="service-attributes">
@@ -225,6 +368,8 @@ export default function OrderDetails({ order, timeline = [] }) {
                 </ul>
               </div>
             ) : null}
+
+             */}
           </div>
 
           {/* The checkout's summary panel, same classes — the figures are the same
