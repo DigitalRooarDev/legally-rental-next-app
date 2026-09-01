@@ -13,7 +13,6 @@ import EmptyState from '@/components/theme/EmptyState';
  */
 export default function Home({ data, error = null }) {
   const rails = [
-    { key: 'top', title: 'Most Popular', products: data.topServices, priority: true },
     {
       key: 'property',
       title: 'Property Rentals',
@@ -26,6 +25,7 @@ export default function Home({ data, error = null }) {
       products: data.vehicles,
       viewAllHref: '/search?category=vehicle',
     },
+    { key: 'top', title: 'Most Popular', products: data.topServices, priority: true },
     {
       key: 'wishlist',
       title: 'Rentals you may like',

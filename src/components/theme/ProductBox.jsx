@@ -129,7 +129,7 @@ function ProductBox({
         <div className="product-card-top d-flex justify-content-between">
           <h4 className="product-card-title">
             {/* stretched-link makes the whole card clickable without nesting controls. */}
-            <Link className="product-card-link stretched-link" href={product.href}>
+            <Link className="product-card-link stretched-link" href={product.href} target="_blank" rel="noopener noreferrer">
               {product.name}
             </Link>
           </h4>

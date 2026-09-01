@@ -4960,3 +4960,31 @@ label.reason-field {
 .review-other {
   margin-top: 5px;
 }
+.ant-popover {
+    z-index: 9 !important;
+}
+ul.social-share a,ul.social-share button {
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  padding: 3px 0;
+  color: #000;
+}
+ul.social-share a:hover,
+ul.social-share button:hover {
+  color: #8121cf;
+}
+ul.social-share li a,
+ul.social-share li button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+ul.social-share li i {
+  width: 16px;
+}
+
+ul.social-share {
+  min-width: 121px;
+}
