@@ -65,13 +65,21 @@ export default function ServiceActions({ serviceId, name, isFavorite = false }) 
       toast.info(url);
     }
   };
-
   const handleCopyLink = async () => {
+    const link = window.location.href;
+
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(link);
       toast.success('Link copied to clipboard.');
-    } catch {
-      toast.info(window.location.href);
+    } catch (error) {
+      const textarea = document.createElement('textarea');
+      textarea.value = link;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+
+      toast.success('Link copied to clipboard.');
     }
   };
   const content = (
