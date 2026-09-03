@@ -1,6 +1,36 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { APP_STORE_LINKS, FOOTER_COLUMNS, SOCIAL_LINKS } from '@/components/theme/footerNav';
+import {
+  APP_STORE_LINKS,
+  CATEGORY_COLUMN_ID,
+  FOOTER_COLUMNS,
+  SOCIAL_LINKS,
+} from '@/components/theme/footerNav';
+import { categoryParam } from '@/lib/categories';
+
+/**
+ * `categoryList` -> the "Rental Categories" column.
+ *
+ * `categoryParam` rather than `category.slug`: it falls back to the id for a
+ * category the API sends without a slug, which `/search` resolves either way —
+ * without it such a category would link to `?category=` and filter nothing.
+ *
+ * Sub-categories are deliberately left out. The API returns 40-odd across the
+ * five parents, and the footer's job is the top of each tree; `/search` is where
+ * they are narrowed.
+ */
+const toCategoryLinks = (categories) =>
+  (Array.isArray(categories) ? categories : [])
+    .map((category) => {
+      const param = categoryParam(category);
+      if (!param || !category?.name) return null;
+
+      return {
+        label: category.name,
+        href: `/search?category=${encodeURIComponent(param)}`,
+      };
+    })
+    .filter(Boolean);
 
 function FooterLink({ link }) {
   if (link.external) {
@@ -14,8 +44,16 @@ function FooterLink({ link }) {
   return <Link href={link.href}>{link.label}</Link>;
 }
 
-export default function Footer() {
+/**
+ * @param {object} props
+ * @param {Array<{id: string, name: string, slug: string}>} [props.categories]
+ *   From `getCategories()`, which the layout already awaits for the header —
+ *   it is `cache()`d, so passing it here costs no extra request. Empty on an API
+ *   failure, which leaves the column on its hard-coded fallback.
+ */
+export default function Footer({ categories = [] }) {
   const year = new Date().getUTCFullYear();
+  const categoryLinks = toCategoryLinks(categories);
 
   return (
     <>
@@ -46,20 +84,30 @@ export default function Footer() {
               </div>
             </div>
 
-            {FOOTER_COLUMNS.map((column) => (
-              <div className={`footer-col ${column.colClass}`} key={column.title}>
-                <div className="footer-box">
-                  <h5 className="footer-title">{column.title}</h5>
-                  <ul className="menu">
-                    {column.links.map((link) => (
-                      <li key={`${column.title}-${link.label}`}>
-                        <FooterLink link={link} />
-                      </li>
-                    ))}
-                  </ul>
+            {FOOTER_COLUMNS.map((column) => {
+              // Only the categories column is dynamic, and only when the call
+              // returned something — an empty list keeps the written links
+              // rather than rendering a heading with nothing under it.
+              const links =
+                column.id === CATEGORY_COLUMN_ID && categoryLinks.length > 0
+                  ? categoryLinks
+                  : column.links;
+
+              return (
+                <div className={`footer-col ${column.colClass}`} key={column.title}>
+                  <div className="footer-box">
+                    <h5 className="footer-title">{column.title}</h5>
+                    <ul className="menu">
+                      {links.map((link) => (
+                        <li key={`${column.title}-${link.label}`}>
+                          <FooterLink link={link} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="footer-col downloadapp-col">
               <div className="footer-box">

@@ -146,6 +146,26 @@ export const formatDateTime = (value) => {
   return Number.isNaN(date.getTime()) ? String(raw) : dateTimeFormatter.format(date);
 };
 
+/**
+ * "2026-05-14" -> "May 2026".
+ *
+ * A review dates to the month: which day a host left it carries no meaning, and
+ * the shorter string keeps the card's head on one line. Same en-GB/UTC pinning as
+ * `formatDate`, and for the same hydration reason.
+ */
+const monthYearFormatter = new Intl.DateTimeFormat("en-GB", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+export const formatMonthYear = (value) => {
+  const raw = toDateString(value);
+  if (!raw) return "";
+  const date = parseApiDate(value);
+  return Number.isNaN(date.getTime()) ? String(raw) : monthYearFormatter.format(date);
+};
+
 /** Collapses a same-day booking to one date instead of "23 Jun – 23 Jun". */
 export const formatBookingRange = (from, to) => {
   const start = formatDate(from);

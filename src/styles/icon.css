@@ -364,3 +364,10 @@
 .icon-guidelines{
   mask-image: url(/images/svg/guidelines.svg);
 }
+
+.icon-shield{
+  mask-image: url(/images/svg/shild.svg);
+}
+.icon-born{
+  mask-image: url(/images/svg/born.svg);
+}

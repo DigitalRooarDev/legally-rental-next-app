@@ -97,7 +97,9 @@ export default async function RootLayout({ children }) {
                         </Suspense>
                         <div className="main">{children}</div>
                         <SiteChrome>
-                          <Footer />
+                          {/* Same `getCategories()` result the header uses — it is
+                              `cache()`d, so the footer's category column is free. */}
+                          <Footer categories={categories} />
                         </SiteChrome>
                       </div>
                     </BodyWrapper>

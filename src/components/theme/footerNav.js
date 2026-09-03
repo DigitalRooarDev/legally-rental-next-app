@@ -1,5 +1,14 @@
 /** Footer link groups + social links — data-driven so the markup stays declarative. */
 
+/**
+ * The one column whose links come from the API rather than from this file.
+ *
+ * `<Footer>` matches on this id and swaps in `categoryList`; the links written
+ * below it stand in only when that call comes back empty, so the column is never
+ * a bare heading. Same reasoning as `FALLBACK_CATEGORIES` in `constants.js`.
+ */
+export const CATEGORY_COLUMN_ID = 'rental-categories';
+
 export const SOCIAL_LINKS = [
   { href: 'https://www.facebook.com/legallyng/', className: 'fb', icon: 'icon-facebook', title: 'Facebook' },
   { href: 'https://www.instagram.com/legallyng/', className: 'instagram', icon: 'icon-instagram', title: 'Instagram' },
@@ -14,7 +23,7 @@ export const FOOTER_COLUMNS = [
     title: 'General',
     colClass: 'general-links-col',
     links: [
-      { label: 'About Us', href: 'https://group.legallyng.com/about-us/', external: true },
+      { label: 'About Us', href: '/about-us' },
       { label: 'Legally', href: '/' },
       { label: 'Sue', href: 'https://sue.legallyng.com/', external: true },
       { label: 'Contact Us', href: 'https://group.legallyng.com/contact-us/', external: true },
@@ -22,8 +31,11 @@ export const FOOTER_COLUMNS = [
     ],
   },
   {
+    id: CATEGORY_COLUMN_ID,
     title: 'Rental Categories',
     colClass: 'money-col',
+    // Fallback only — the live list is whatever `categoryList` returns, which is
+    // where Halls/Spaces (absent here) comes from.
     links: [
       { label: 'Property', href: '/search?category=property' },
       { label: 'Equipment', href: '/search?category=equipment' },

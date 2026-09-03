@@ -1644,3 +1644,136 @@ export const toCheckoutQuote = (response) => {
     guests: (Number.parseInt(response.adults, 10) || 0) + (Number.parseInt(response.children, 10) || 0),
   };
 };
+
+/**
+ * @typedef {object} BuyerReview
+ * @property {string} id
+ * @property {string} hostId
+ * @property {string} hostName
+ * @property {string} hostImage  `""` when the host has no photo — render initials.
+ * @property {string} hostLocation
+ * @property {string} date       Raw; the view runs it through `formatMonthYear`.
+ * @property {string} comment    `""` for a rating left without words.
+ */
+
+/**
+ * @typedef {object} BuyerProfile
+ * @property {string} id
+ * @property {string} name
+ * @property {string} location
+ * @property {string} image
+ * @property {string} initial
+ * @property {boolean} isVerified
+ * @property {string} verificationNote  The identity-verification explainer.
+ * @property {string} memberSince       "December 2025", or `""`.
+ * @property {string} bornIn            "Born in the 60s", or `""`.
+ * @property {Array<{key: string, value: number, label: string}>} stats
+ * @property {number} reviewCount       What the API counts, which can exceed `reviews.length`.
+ * @property {BuyerReview[]} reviews
+ */
+
+/** A stat is dropped rather than shown as "0 Trips" — an empty row says nothing. */
+const toStat = (key, value, singular, plural = `${singular}s`) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return { key, value: parsed, label: parsed === 1 ? singular : plural };
+};
+
+/**
+ * "1962-04-08" -> "Born in the 60s". The profile shows the decade, never the date:
+ * a full date of birth is not this page's to publish.
+ *
+ * `"1970-01-01"` is dropped along with `""` and `"0000-00-00"`. It is the Unix
+ * epoch, which is what the API sends for a member who never gave a birthday — a
+ * real one is vanishingly unlikely to land on that exact day, and "Born in the
+ * 70s" printed under every unset profile is worse than printing nothing.
+ */
+const toBirthDecade = (value) => {
+  const raw = String(value ?? "").trim();
+  if (!raw || raw.startsWith("0000") || raw.startsWith("1970-01-01")) return "";
+
+  const year = Number.parseInt(raw.slice(0, 4), 10);
+  if (!Number.isFinite(year) || year < 1900 || year > new Date().getUTCFullYear()) return "";
+
+  return `Born in the ${String(Math.floor(year / 10) * 10 % 100).padStart(2, "0")}s`;
+};
+
+const isTruthyFlag = (value) =>
+  value === true || value === 1 || value === "1" || String(value).toLowerCase() === "true";
+
+/** Whichever name this environment gives the KYC flag; the first one present wins. */
+const VERIFICATION_FLAGS = [
+  "identity_verified",
+  "is_identity_verified",
+  "is_verified",
+  "kyc_verified",
+  "verified",
+];
+
+/**
+ * `buyerReviewProfile` does not send a verification flag today — it sends
+ * `buyerContent`, the identity-verification explainer, and only for a member who
+ * has been through the check. So the flag is read when one appears (any of the
+ * names above, whichever the API settles on) and the explainer stands in until
+ * then. Without the fallback the badge and the "Identity verified" row the design
+ * calls for would never render at all.
+ */
+const toVerified = (response) => {
+  const flag = VERIFICATION_FLAGS.find((key) => response[key] !== undefined);
+  if (flag) return isTruthyFlag(response[flag]);
+  return Boolean(String(response.buyerContent ?? "").trim());
+};
+
+/**
+ * Normalises `buyerReviewProfile` — the public profile behind `/users/profile/[id]`.
+ *
+ * Everything the page shows arrives in this one response, reviews included, which
+ * is why the "show all reviews" dialog needs no second request: it re-lists the
+ * array already on the page.
+ *
+ * @param {object} response `buyerReviewProfile`'s `response` block.
+ * @returns {BuyerProfile|null} `null` for a payload with no buyer in it, which the
+ *   page turns into a 404 rather than a nameless profile.
+ */
+export const toBuyerProfileViewModel = (response) => {
+  if (!response || typeof response !== "object" || !response.buyer_id) return null;
+
+  const name = String(response.buyer_name ?? "").trim() || "Legally member";
+
+  const reviews = (Array.isArray(response.what_hosts_are_saying) ? response.what_hosts_are_saying : [])
+    .filter((review) => review?.review_id !== undefined)
+    .map((review) => ({
+      id: String(review.review_id),
+      hostId: String(review.seller_id ?? ""),
+      hostName: String(review.seller_name ?? "").trim() || "Legally host",
+      hostImage: review.seller_image || "",
+      // Not sent today; rendered only when it is, rather than reserving blank space.
+      hostLocation: String(review.seller_address ?? review.seller_location ?? "").trim(),
+      date: review.date || "",
+      comment: String(review.comment ?? "").trim(),
+    }));
+
+  return {
+    id: String(response.buyer_id),
+    name,
+    location: String(response.buyerAddress ?? "").trim(),
+    /**
+     * Absent from this endpoint's payload. Read defensively so the photo appears
+     * the day it is added; until then the view falls back to the initial.
+     */
+    image: response.buyer_image || response.profileImage || response.profile_image || "",
+    initial: name.charAt(0).toUpperCase(),
+    isVerified: toVerified(response),
+    /** Collapses the API's embedded newlines and indentation into one paragraph. */
+    verificationNote: String(response.buyerContent ?? "").replace(/\s+/g, " ").trim(),
+    memberSince: response.join_date || response.created_at || response.member_since || "",
+    bornIn: toBirthDecade(response.born_in),
+    stats: [
+      toStat("trips", response.trips, "Trip"),
+      toStat("reviews", response.reviews, "Review"),
+      toStat("years", response.years_on_legally, "Year on Legally", "Years on Legally"),
+    ].filter(Boolean),
+    reviewCount: Number.parseInt(response.reviews, 10) || reviews.length,
+    reviews,
+  };
+};
