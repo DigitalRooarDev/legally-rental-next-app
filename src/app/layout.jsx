@@ -71,7 +71,6 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" className={poppins.variable}>
-     
       <body>
         {/* Extracts antd's CSS-in-JS during SSR so modals don't flash unstyled. */}
         <AntdRegistry>
@@ -112,6 +111,12 @@ export default async function RootLayout({ children }) {
 
         <BackToTop />
         <BootstrapClient />
+
+        <div className="sticky-whatsapp-btn">
+          <a className="btn-click wp-link" href="https://wa.me/2349031957481" target="_blank">
+            <img src="images/svg/whatsapp.svg" alt="whatsapp" />
+          </a>
+        </div>
 
         {/* Checkout gateways. Loaded here rather than on demand because both SDKs
             attach globals the checkout expects to already exist, and `async` keeps
