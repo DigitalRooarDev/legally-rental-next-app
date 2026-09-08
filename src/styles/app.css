@@ -1642,6 +1642,12 @@ body {
   resize: none;
 }
 
+.authentication-wrapper .react-tel-input .form-control {
+  height: 45px;
+  padding-left: 55px;
+  width: 100%;
+}
+
 .authentication-wrapper .form-group {
   margin-bottom: 20px;
 }
@@ -3959,9 +3965,11 @@ body {
   .service-gallery--mosaic .gallery-side {
     display: none;
   }
-
+  .service-gallery {
+    aspect-ratio: 100 / 75;
+  }
   .service-gallery--mosaic .gallery-tile--main {
-    aspect-ratio: 16 / 10;
+    height: 100%;
   }
 }
 
@@ -4782,10 +4790,6 @@ label.reason-field {
   background-color: #f5a623;
 }
 
-.star-rating-star:hover:not(:disabled) .icon {
-  background-color: #f5a623;
-}
-
 .star-rating-star:disabled {
   cursor: default;
 }
@@ -4868,7 +4872,7 @@ label.reason-field {
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 5px;
-  color: #6b6b87;
+  color: #1f1741b3;
 }
 
 /* The "Others" text on one question — quoted, since it is the visitor's wording
@@ -4896,6 +4900,25 @@ label.reason-field {
 .star-rating span.star-rating-star {
   padding: 0;
   cursor: default;
+  position: relative;
+}
+
+/* The lit slice of a fractional star, clipped by its wrapper's width. The icon
+   inside keeps its full size — masking a narrowed element would squash the star
+   rather than cut it. */
+.star-rating-star-part {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.star-rating-star-part .icon {
+  flex: 0 0 auto;
+  background-color: #f5a623;
 }
 
 .star-rating span.star-rating-star .icon {
@@ -5056,8 +5079,8 @@ ul.social-share {
 
 .profile-avatar {
   flex: 0 0 auto;
-  width: 48px;
-  height: 48px;
+  width: var(--avatar-size, 55px);
+  height: var(--avatar-size, 55px);
   border-radius: 50%;
   object-fit: cover;
   background-color: #f2e9fc;
@@ -5067,13 +5090,11 @@ ul.social-share {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(var(--avatar-size, 48px) / 2.4);
+  font-size: calc(var(--avatar-size, 55px) / 2.4);
   font-weight: 600;
   line-height: 1;
   color: #8121cf;
   background-color: #f2e9fc;
-  width: 106px;
-  height: 106px;
 }
 
 .profile-card-badge {
@@ -5119,7 +5140,7 @@ ul.social-share {
 }
 
 .profile-card-stats li + li {
-  border-top: 1px solid #C1C1C1;
+  border-top: 1px solid #c1c1c1;
 }
 
 .profile-card-stat-value {
@@ -5159,8 +5180,8 @@ ul.social-share {
   color: rgba(31, 23, 65, 0.7);
 }
 
-.user-facts li .icon{
-  color: #8121CF;
+.user-facts li .icon {
+  color: #8121cf;
   width: 18px;
 }
 .user-fact-icon {
@@ -5180,26 +5201,99 @@ ul.social-share {
   padding-top: 30px;
   border-top: 1px solid #eee7f8;
 }
+.user-reviews-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 20px;
+}
+
+.user-reviews-heading {
+  min-width: 0;
+}
 
 .user-reviews-title {
-  margin-bottom: 25px;
+  margin-bottom: 5px;
   font-size: 20px;
   font-weight: 600;
   color: #1f1741;
 }
 
+.user-reviews-head p {
+  margin-bottom: 0;
+  font-size: 14px;
+  color: rgba(31, 23, 65, 0.7);
+}
+
+/* The running count, beside the heading. The list is added to from one control
+   at the foot of the grid, so there is nothing to steer from up here. */
+.host-reviews-count {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+  font-size: 14px;
+  white-space: nowrap;
+  color: #8121cf;
+}
+
+.host-reviews-error {
+  margin: 16px 0 0;
+  font-size: 14px;
+  color: #d13b3b;
+}
+
+.host-reviews-foot {
+  margin-top: 26px;
+  text-align: center;
+}
+
+.all-reviews-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: auto;
+  padding: 13px 22px;
+  color: #8121cf;
+  border-color: #8121cf;
+}
+
+.all-reviews-btn:hover:not(:disabled) {
+  color: #fff;
+  background-color: #8121cf;
+}
+
+.all-reviews-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.all-reviews-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- The grid of cards --- */
 .user-reviews-grid {
   row-gap: 24px;
 }
-.user-reviews-grid > div:not(:last-child) {
-  border-right: 1px solid #C1C1C1;
+
+.host-review {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fff;
+  box-shadow: 0 14px 34px #1f174124;
+  border-radius: 10px;
+  padding: 18px;
 }
 
 .host-review-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #ececf2;
 }
 
 .host-review-author {
@@ -5207,48 +5301,128 @@ ul.social-share {
 }
 
 .host-review-name {
-  margin-bottom: 0;
+  margin-bottom: 4px;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   color: #1f1741;
-  line-height: 1.2
+  line-height: 1.2;
 }
 
-.host-review-location,
-.host-review-date {
+.host-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+  font-size: 12px;
+  color: rgba(31, 23, 65, 0.7);
+  /* Staging addresses run long; the card is a third of a row wide. */
+  overflow-wrap: anywhere;
+}
+
+.host-review-meta:last-child {
   margin-bottom: 0;
-  font-size: 14px;
+}
+
+.host-review-meta .icon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: #8121cf;
+}
+
+/* --- Overall rating --- */
+.host-review-rating {
+  padding: 14px 0;
+  border-bottom: 1px solid #ececf2;
+}
+
+.host-review-rating-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
   color: rgba(31, 23, 65, 0.7);
 }
 
-.host-review-date {
-  margin-bottom: 15px;
+.host-review-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.host-review-rating-value {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1;
+  color: #1f1741;
+}
+
+/* The scale, set down so the score stays the thing being read. */
+.host-review-rating-max {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(31, 23, 65, 0.6);
+}
+
+.host-review-rating .star-rating span.star-rating-star .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* --- The answered questions ---
+
+   Reuses `.review-scores` / `.review-answer` / `.review-selected` from the
+   booking page's read-back, so a review looks the same wherever it is shown.
+   What differs here is that the card holds someone else's free text — staging
+   data runs to unbroken strings, which would push the card past its column
+   without a break rule — and that a long one is clamped until "Read more". */
+.host-review .review-scores {
+  flex: 1 1 auto;
+}
+
+.host-review .review-answer:first-child {
+  border-top: none;
+}
+
+/* The question heads its own answers, so it carries the weight the booking page's
+   read-back gives to the score beside it — which this endpoint does not send. */
+.host-review .review-score-question {
+  font-weight: 600;
+  color: #1f1741;
+}
+
+.host-review .review-answer-comment,
+.host-review .review-selected li {
+  overflow-wrap: anywhere;
+}
+
+.host-review-more {
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8121cf;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .host-review-comment {
   margin-bottom: 0;
-  font-size: 16px;
+  padding-top: 14px;
+  font-size: 15px;
   line-height: 1.6;
   color: #4a4a68;
+  /* Free text, and the staging data runs to unbroken strings — without this one
+     of them widens the card and breaks the three-up grid. */
+  overflow-wrap: anywhere;
 }
 
 .host-review-comment-empty {
   color: rgba(31, 23, 65, 0.9);
 }
 
-.all-reviews-btn {
-  display: inline-block;
-  min-width: auto;
-  margin-top: 26px;
-  padding: 13px 22px;
-  color: #8121cf;
-  border-color: #8121cf;
-}
-
-.all-reviews-btn:hover {
-  color: #fff;
-  background-color: #8121cf;
-}
 .identity-modal .ant-modal-header {
   margin: 0;
   padding: 0;
@@ -5257,11 +5431,11 @@ ul.social-share {
 
 .identity-hero {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 14px;
   padding: 20px;
   color: #fff;
-  background-image: linear-gradient(135deg, #8121cf 0%, #b44bf0 55%, #f05a9b 100%);
+  background-image: linear-gradient(35deg, #01ccc0 0%, #8121cf 100%);
   border-radius: 14px;
 }
 
@@ -5271,32 +5445,38 @@ ul.social-share {
 }
 
 .identity-hero-name {
-  margin-bottom: 2px;
-  font-size: 17px;
-  font-weight: 700;
+  margin-bottom: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
 }
 
 .identity-hero-meta {
-  margin-bottom: 14px;
-  font-size: 12px;
+  margin-bottom: 35px;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.85);
 }
 
 .identity-hero-copy {
   margin-bottom: 0;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
   line-height: 1.5;
+  color: #fff;
 }
 
 .identity-hero-avatar {
-  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
 }
-
+.identity-modal .ant-modal-header {
+    border: none !important;
+}
 .identity-note {
   margin: 18px 0 0;
   font-size: 13px;
   line-height: 1.7;
   color: #4a4a68;
+  
 }
 
 .identity-note a {
@@ -5305,25 +5485,6 @@ ul.social-share {
   text-decoration: underline;
 }
 
-/* --- All-reviews dialog --- */
-.all-reviews-source {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  font-size: 13px;
-  color: rgba(31, 23, 65, 0.6);
-  border-bottom: 1px solid #eee7f8;
-}
-.all-reviews-list {
-  max-height: 60vh;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-
-.all-reviews-list .host-review + .host-review {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid #f3edfa;
-}
 @media (max-width: 575.98px) {
   .profile-card {
     flex-direction: column;
@@ -5946,4 +6107,18 @@ ul.social-share {
   .legally-page-banner .sec-title {
     font-size: 24px;
   }
+}
+
+/* --- Register --- */
+
+/* The guest account panel holds a sentence and two controls where the signed-in
+   list holds single words; the shared 180px wraps "New customer?" onto its own
+   line, above a button already sitting on one. */
+.my-account-dropdown-guest {
+  width: 165px;
+}
+
+.my-account-dropdown-guest .my-account-signup {
+  justify-content: space-between;
+  gap: 8px;
 }

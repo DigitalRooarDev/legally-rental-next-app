@@ -1646,6 +1646,13 @@ export const toCheckoutQuote = (response) => {
 };
 
 /**
+ * @typedef {object} ReviewAnswer
+ * @property {string} question
+ * @property {string[]} answers  Options ticked, "Others" removed.
+ * @property {string} comment    The free text "Others" opened; `""` when unused.
+ */
+
+/**
  * @typedef {object} BuyerReview
  * @property {string} id
  * @property {string} hostId
@@ -1653,8 +1660,106 @@ export const toCheckoutQuote = (response) => {
  * @property {string} hostImage  `""` when the host has no photo — render initials.
  * @property {string} hostLocation
  * @property {string} date       Raw; the view runs it through `formatMonthYear`.
- * @property {string} comment    `""` for a rating left without words.
+ * @property {number} rating     `overall_rating` as the host submitted it, 0 when unrated.
+ * @property {ReviewAnswer[]} questions  The review in full — what the card renders.
+ * @property {string} comment    Every free-text answer joined; the fallback for a
+ *   payload from before `questions` existed. `""` when none was written.
  */
+
+/**
+ * "Others" is the option that opens the free-text box, not an answer in itself —
+ * printing it beside the comment it produced says the same thing twice, and on a
+ * question answered with nothing else it reads as a non-answer.
+ */
+const OTHER_OPTION = /^others?$/i;
+
+/**
+ * `what_hosts_are_saying[].questions` -> one entry per question actually answered.
+ *
+ * `answer` arrives as one comma-joined string ("Helpful, Respectful"), which is
+ * split back apart so the view can render the options individually rather than
+ * printing the API's punctuation. A question with neither an option nor a comment
+ * left is dropped: it was asked, not answered.
+ *
+ * @param {Array<{question: string, answer: string, comment: string}>} questions
+ * @returns {ReviewAnswer[]}
+ */
+const toReviewAnswers = (questions) =>
+  (Array.isArray(questions) ? questions : [])
+    .map((entry) => ({
+      question: String(entry?.question ?? "").trim(),
+      answers: String(entry?.answer ?? "")
+        .split(",")
+        .map((answer) => answer.trim())
+        .filter((answer) => answer && !OTHER_OPTION.test(answer)),
+      comment: String(entry?.comment ?? "").trim(),
+    }))
+    .filter((entry) => entry.answers.length > 0 || entry.comment);
+
+/** The scale every rating on a review is out of. */
+export const MAX_REVIEW_RATING = 5;
+
+/**
+ * `"4.3"` -> `4.3`; anything unusable -> `0`, so the card can hide the block
+ * rather than print "0.00". Clamped to the scale: a payload reading `"7"` would
+ * otherwise fill no stars at all, since none of them matches it.
+ */
+const toOverallRating = (value) => {
+  const parsed = Number.parseFloat(String(value ?? ""));
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return Math.min(parsed, MAX_REVIEW_RATING);
+};
+
+/**
+ * One host review, from either endpoint that sends them.
+ *
+ * `buyerReviewProfile.what_hosts_are_saying` (the first reviews, inlined in the
+ * profile) and `buyerReviewList.reviewData` (every page after it) send the same
+ * record, so both come through here and the card never has to know which call it
+ * was fetched by.
+ *
+ * @param {object} review
+ * @returns {BuyerReview}
+ */
+const toBuyerReview = (review) => {
+  const questions = toReviewAnswers(review.questions);
+
+  return {
+    id: String(review.review_id),
+    hostId: String(review.seller_id ?? ""),
+    hostName: String(review.seller_name ?? "").trim() || "Legally host",
+    hostImage: review.seller_image || "",
+    hostLocation: String(review.seller_address ?? review.seller_location ?? "").trim(),
+    date: review.date || "",
+    rating: toOverallRating(review.overall_rating),
+    questions,
+    /**
+     * The host's own words, for the card that has room for one paragraph.
+     *
+     * A review no longer carries a single `comment`: the free text now hangs off
+     * whichever questions were answered with "Others", so a review can hold none,
+     * one or three of them. They are joined in the order asked. The old flat field
+     * is still read, for a payload from before the change.
+     */
+    comment:
+      questions
+        .map((entry) => entry.comment)
+        .filter(Boolean)
+        .join(" ") || String(review.comment ?? "").trim(),
+  };
+};
+
+/**
+ * A list of host reviews. A record with no `review_id` is dropped — that is the
+ * API's empty placeholder, not a review someone left blank.
+ *
+ * @param {unknown} list
+ * @returns {BuyerReview[]}
+ */
+export const toBuyerReviews = (list) =>
+  (Array.isArray(list) ? list : [])
+    .filter((review) => review?.review_id !== undefined)
+    .map(toBuyerReview);
 
 /**
  * @typedef {object} BuyerProfile
@@ -1740,28 +1845,19 @@ export const toBuyerProfileViewModel = (response) => {
 
   const name = String(response.buyer_name ?? "").trim() || "Legally member";
 
-  const reviews = (Array.isArray(response.what_hosts_are_saying) ? response.what_hosts_are_saying : [])
-    .filter((review) => review?.review_id !== undefined)
-    .map((review) => ({
-      id: String(review.review_id),
-      hostId: String(review.seller_id ?? ""),
-      hostName: String(review.seller_name ?? "").trim() || "Legally host",
-      hostImage: review.seller_image || "",
-      // Not sent today; rendered only when it is, rather than reserving blank space.
-      hostLocation: String(review.seller_address ?? review.seller_location ?? "").trim(),
-      date: review.date || "",
-      comment: String(review.comment ?? "").trim(),
-    }));
+  const reviews = toBuyerReviews(response.what_hosts_are_saying);
 
   return {
     id: String(response.buyer_id),
     name,
     location: String(response.buyerAddress ?? "").trim(),
-    /**
-     * Absent from this endpoint's payload. Read defensively so the photo appears
-     * the day it is added; until then the view falls back to the initial.
-     */
-    image: response.buyer_image || response.profileImage || response.profile_image || "",
+    /** `buyerImage` is the field the endpoint sends; the rest are older spellings. */
+    image:
+      response.buyerImage ||
+      response.buyer_image ||
+      response.profileImage ||
+      response.profile_image ||
+      "",
     initial: name.charAt(0).toUpperCase(),
     isVerified: toVerified(response),
     /** Collapses the API's embedded newlines and indentation into one paragraph. */

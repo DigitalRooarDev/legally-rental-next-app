@@ -34,7 +34,7 @@ export default function ProfileIdentityCard({ profile }) {
     <>
       <div className="profile-card-identity">
         <div className="profile-card-avatar">
-          <ProfileAvatar src={profile.image} initial={profile.initial} size={88} />
+          <ProfileAvatar src={profile.image} initial={profile.initial} size={106} />
           {profile.isVerified ? (
             <span className="profile-card-badge">
               <i className="icon icon-shield" aria-hidden="true" />

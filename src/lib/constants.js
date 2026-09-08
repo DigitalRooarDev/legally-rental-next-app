@@ -211,3 +211,14 @@ export const ORDER_WINDOW_FILTERS = Object.freeze([
   { value: "today", label: "Today" },
   { value: "upcoming", label: "Upcoming" },
 ]);
+
+/**
+ * How many host reviews a profile adds at a time — one row of three cards, which
+ * is also `buyerReviewList`'s page size. The grid grows by this many; it never
+ * replaces what is already on screen.
+ *
+ * Shared rather than declared in the action: the list component needs the same
+ * number to slice the reviews inlined in the profile payload into the first
+ * batch, and a "use server" module can only export functions.
+ */
+export const REVIEWS_PER_PAGE = 3;

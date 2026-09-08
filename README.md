@@ -375,7 +375,7 @@ The script rewrites `../images/…` URLs to `/images/…`, strips the render-blo
 
 | Gap                         | Reason                                                                                             |
 | --------------------------- | -------------------------------------------------------------------------------------------------- |
-| `/signup`                   | v2 `createAccount` exists but needs a long field chain — its own piece of work.                     |
+| `/signup` submit            | Page, form and validation are built and wired. **v2 `createAccount` answers a bare `[]`** (HTTP 200, no envelope, no message) for every payload tried — including the ecommerce storefront's byte-for-byte, on staging *and* production, as multipart / urlencoded / JSON / GET, with and without browser headers. `signIn` and `updateProfile` on the same base return proper envelopes, so it is this endpoint, not the transport. The storefront hits the same wall and shows an empty error toast. Needs the backend team. |
 | Manage Address              | **No endpoint on either base.** `getAllAddress`/`addAddress`/`deleteAddress` and every naming variant probed return 404. |
 | Order detail page           | No order-detail endpoint (`orderDetail`, `getOrderItem`, `orderView` all 404), so `OrderCard` shows everything the list returns. |
 | Order cancellation          | `cancelOrder` is 404 on both bases.                                                                |

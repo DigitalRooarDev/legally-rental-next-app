@@ -42,8 +42,10 @@ export default function AccountMenu() {
           <span>Account</span>
         </div>
       </Link>
-      {isAuthenticated && (
-        <div className="my-account-dropdown">
+      <div
+        className={`my-account-dropdown${isAuthenticated ? "" : " my-account-dropdown-guest"}`}
+      >
+        {isAuthenticated ? (
           <ul>
             {MY_ACCOUNT_TABS.map((tab) => (
               <li key={tab.id}>
@@ -56,8 +58,20 @@ export default function AccountMenu() {
               </button>
             </li>
           </ul>
-        </div>
-      )}
+        ) : (
+          /* A guest gets both doors rather than only the tile's link to /login:
+             registering is the one journey a new visitor cannot reach from the
+             header otherwise, and it is the shape the storefront already uses. */
+          <div className="my-account-dropdown-top">
+            <div className="my-account-signup">
+              New customer? <Link href="/signup">Sign Up</Link>
+            </div>
+            <Link href="/login" className="btn btn-primary">
+              Login
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -128,11 +128,11 @@ export default function ResultsMapGoogle({ apiKey, mapId, points }) {
         {selected ? (
           <InfoWindow
             position={{ lat: selected.latitude, lng: selected.longitude }}
-            pixelOffset={[0, -12]}
+            pixelOffset={[0, -30]}
             onCloseClick={() => setSelectedId(null)}
             headerDisabled
           >
-            <Link href={selected.href} className="map-card">
+            <Link href={selected.href} className="map-card" target="_blank" rel="noopener noreferrer">
               <button
                 type="button"
                 className="map-card-close"

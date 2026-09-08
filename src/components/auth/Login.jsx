@@ -179,6 +179,10 @@ export default function Login() {
 
               <SocialLoginButtons redirectTo={redirectTo} />
             </form>
+
+            <p className="sign-up-content mt-4">
+              Don&apos;t have an account? <Link href="/signup">Sign Up</Link>
+            </p>
           </div>
         </div>
       </div>
