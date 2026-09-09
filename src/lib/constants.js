@@ -222,3 +222,17 @@ export const ORDER_WINDOW_FILTERS = Object.freeze([
  * batch, and a "use server" module can only export functions.
  */
 export const REVIEWS_PER_PAGE = 3;
+
+/**
+ * How many reviews a listing page shows at once — one row of the same three-up
+ * grid the profile uses.
+ *
+ * The listing pages rather than grows: a visitor lands on this section from the
+ * rating link at the top, so the pager has to leave the heading where they were
+ * put instead of pushing it up the page batch by batch.
+ */
+export const SERVICE_REVIEWS_PER_PAGE = 3;
+
+/** Anchor the listing page's rating link scrolls to. Shared so the two agree. */
+export const SERVICE_REVIEWS_ANCHOR = "customer-reviews";
+ 

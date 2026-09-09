@@ -97,6 +97,7 @@ export default function MyWishlist() {
             currentPage={pagination.currentPage}
             lastPage={pagination.lastPage}
             onChange={setPage}
+            label="Wishlist pages"
           />
         </>
       )}

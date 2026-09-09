@@ -4824,7 +4824,7 @@ label.reason-field {
 
 /* One answered question: its score row, then whatever explains it. */
 .review-answer {
-  padding: 15px 0;
+  padding: 12px 0;
   border-top: 1px solid #ececf2;
 }
 
@@ -5207,7 +5207,7 @@ ul.social-share {
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px 24px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .user-reviews-heading {
@@ -5216,8 +5216,8 @@ ul.social-share {
 
 .user-reviews-title {
   margin-bottom: 5px;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 700;
   color: #1f1741;
 }
 
@@ -5386,7 +5386,7 @@ ul.social-share {
 /* The question heads its own answers, so it carries the weight the booking page's
    read-back gives to the score beside it — which this endpoint does not send. */
 .host-review .review-score-question {
-  font-weight: 600;
+  font-weight: 500;
   color: #1f1741;
 }
 
@@ -5421,6 +5421,45 @@ ul.social-share {
 
 .host-review-comment-empty {
   color: rgba(31, 23, 65, 0.9);
+}
+
+/* --- Reviews on a listing ---
+
+   The same block as `.user-reviews`, under the details row rather than under a
+   profile. It reuses every `.user-reviews-*` / `.host-review-*` rule above, so a
+   review reads the same on both screens; only the frame is set here. */
+.service-reviews {
+  margin-top: 60px;
+  padding-top: 50px;
+  border-top: 1px solid #eee7f8;
+  /* The rating link scrolls here, and the header is fixed — without the offset
+     the heading lands under it. */
+  scroll-margin-top: 100px;
+}
+
+/* Focused programmatically after that jump; the scroll is the feedback, so the
+   ring the browser would draw round the whole section is noise. */
+.service-reviews:focus {
+  outline: none;
+}
+
+.service-reviews .product-pagination {
+  margin-top: 60px;
+}
+
+/* The review count beside the rating, as the jump to the section. Set as a link
+   rather than styled flat: it is the one word up there that does something. */
+.service-details-reviews-link {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s ease-in-out;
+}
+
+.service-details-reviews-link:hover,
+.service-details-reviews-link:focus-visible {
+  color: #8121cf;
 }
 
 .identity-modal .ant-modal-header {

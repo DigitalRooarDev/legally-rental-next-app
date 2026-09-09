@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import ActiveCategoryPublisher from "@/components/rental/ActiveCategoryPublisher";
 import ServiceDetails from "@/components/rental/ServiceDetails";
 import { getServiceDetails } from "@/actions/getServiceDetails";
+import { getServiceReviews } from "@/actions/getServiceReviews";
 import { formatPrice, stripHtml } from "@/utils/formats";
 import { CURRENCY_SYMBOL } from "@/lib/constants";
 
@@ -40,6 +41,11 @@ export default async function RentalDetailsPage({ params }) {
 
   if (!service) notFound();
 
+  // Sequential, not parallel: `reviewDetailsList` keys off the numeric id, which
+  // only the listing response carries — the URL holds the slug. A failure here
+  // returns an empty page rather than throwing, so the listing still renders.
+  const { reviews, pagination } = await getServiceReviews({ serviceId: service.id });
+
   return (
     <>
       {/* The id when the slug is absent — this endpoint sends only the former,
@@ -48,7 +54,7 @@ export default async function RentalDetailsPage({ params }) {
         categorySlug={service.categorySlug || service.categoryId}
         rentalType={service.rentalType}
       />
-      <ServiceDetails service={service} />
+      <ServiceDetails service={service} reviews={reviews} reviewPagination={pagination} />
     </>
   );
 }

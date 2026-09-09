@@ -3,6 +3,8 @@ import ServiceActions from '@/components/rental/ServiceActions';
 import ServiceBookingCard from '@/components/rental/ServiceBookingCard';
 import ServiceGallery from '@/components/rental/ServiceGallery';
 import ServicePolicyCard from '@/components/rental/ServicePolicyCard';
+import ServiceReviews from '@/components/rental/ServiceReviews';
+import ReviewsScrollLink from '@/components/rental/ReviewsScrollLink';
 import { CURRENCY_SYMBOL } from '@/lib/constants';
 import { formatPeriod, formatPrice, formatRating, stripHtml } from '@/utils/formats';
 
@@ -11,8 +13,11 @@ import { formatPeriod, formatPrice, formatRating, stripHtml } from '@/utils/form
  *
  * @param {object} props
  * @param {import('@/utils/mappers').ServiceDetailViewModel} props.service
+ * @param {import('@/utils/mappers').BuyerReview[]} [props.reviews]  Page one, fetched
+ *   server-side; `[]` when the listing has none or the call failed.
+ * @param {{currentPage: number, lastPage: number, perPage: number, total: number}} [props.reviewPagination]
  */
-export default function ServiceDetails({ service }) {
+export default function ServiceDetails({ service, reviews = [], reviewPagination }) {
   const rating = formatRating(service.rating);
   const sellerRating = formatRating(service.seller?.rating);
 
@@ -20,6 +25,10 @@ export default function ServiceDetails({ service }) {
   const description = stripHtml(service.description).trim();
 
   const period = service.periodType ? formatPeriod(service.periodType) : '';
+
+  // Only linked when there is a section to land on: a listing whose rating count
+  // and review list disagree would otherwise offer a jump to nothing.
+  const hasReviews = reviews.length > 0;
 
   const priceCards = [
     { key: 'base', label: 'Base Price', icon: 'icon-payment-n', amount: service.basePrice, period },
@@ -82,7 +91,18 @@ export default function ServiceDetails({ service }) {
                 {rating ? (
                   <span className="service-details-rating">
                     <i className="icon icon-star" aria-hidden="true" /> {rating}
-                    {service.ratingCount > 0 ? <> · {service.ratingCount} Reviews </> : null}
+                    {service.ratingCount > 0 ? (
+                      <>
+                        {' · '}
+                        {hasReviews ? (
+                          <ReviewsScrollLink count={service.ratingCount} />
+                        ) : (
+                          <>
+                            {service.ratingCount} Review{service.ratingCount === 1 ? '' : 's'}
+                          </>
+                        )}
+                      </>
+                    ) : null}
                   </span>
                 ) : null}
               </div>
@@ -210,6 +230,14 @@ export default function ServiceDetails({ service }) {
             </div>
           </div>
         </div>
+
+        {hasReviews ? (
+          <ServiceReviews
+            serviceId={service.id}
+            initialReviews={reviews}
+            initialPagination={reviewPagination}
+          />
+        ) : null}
       </div>
     </section>
   );

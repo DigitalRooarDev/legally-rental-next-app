@@ -27,14 +27,17 @@ const buildPages = (currentPage, lastPage) => {
  * @param {number} props.currentPage
  * @param {number} props.lastPage
  * @param {(page: number) => void} props.onChange
+ * @param {string} [props.label]  Names the control for screen readers; pages of
+ *   what. A screen can carry more than one pager, and "Pages" twice tells a
+ *   visitor nothing about which list each moves.
  */
-export default function Pagination({ currentPage, lastPage, onChange }) {
+export default function Pagination({ currentPage, lastPage, onChange, label = "Pages" }) {
   if (!Number.isFinite(lastPage) || lastPage <= 1) return null;
 
   const pages = buildPages(currentPage, lastPage);
 
   return (
-    <nav className="product-pagination" aria-label="Wishlist pages">
+    <nav className="product-pagination" aria-label={label}>
       <ul className="pagination">
         <li className="page-item page-item--arrow">
           <button

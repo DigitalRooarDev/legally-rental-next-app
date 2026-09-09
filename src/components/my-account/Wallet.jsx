@@ -123,6 +123,7 @@ export default function Wallet() {
             currentPage={pagination.currentPage}
             lastPage={pagination.lastPage}
             onChange={setPage}
+            label="Transaction pages"
           />
         </>
       )}

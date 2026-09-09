@@ -126,6 +126,7 @@ export default function MyOrders() {
             currentPage={pagination.currentPage}
             lastPage={pagination.lastPage}
             onChange={setPage}
+            label="Booking pages"
           />
         </>
       )}

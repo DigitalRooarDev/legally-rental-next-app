@@ -114,7 +114,7 @@ export default async function RootLayout({ children }) {
 
         <div className="sticky-whatsapp-btn">
           <a className="btn-click wp-link" href="https://wa.me/2349031957481" target="_blank">
-            <img src="images/svg/whatsapp.svg" alt="whatsapp" />
+            <img src="/images/svg/whatsapp.svg" alt="whatsapp" />
           </a>
         </div>
 
