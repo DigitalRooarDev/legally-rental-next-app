@@ -24,10 +24,10 @@ export const searchAddress = async (query) => {
   try {
     const data = await fetchAPI("mapboxapi", {
       method: "POST",
-      body: { text },
+      body: { text, type: "rental" },
       raw: true,
     });
-
+    
     const suggestions = Array.isArray(data?.suggestions) ? data.suggestions : [];
 
     return suggestions.map((suggestion) => {

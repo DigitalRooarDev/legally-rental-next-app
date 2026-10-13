@@ -5308,6 +5308,36 @@ ul.social-share {
   line-height: 1.2;
 }
 
+/* The byline links to the reviewer's profile. Underlined only on hover: three
+   cards to a row, each with a name in link blue by default, reads as a toolbar
+   rather than as three reviews. */
+.host-review-name-link {
+  color: inherit;
+  transition: color 0.2s ease-in-out;
+}
+
+.host-review-name-link:hover,
+.host-review-name-link:focus-visible {
+  color: #8121cf;
+}
+
+/* Wraps the avatar in the same link. Kept out of the a11y tree, so this is
+   purely about not letting the anchor add a line box around the image. */
+.host-review-avatar-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  line-height: 0;
+  border-radius: 50%;
+}
+
+.host-review-avatar-link .profile-avatar {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.host-review-avatar-link:hover .profile-avatar {
+  opacity: 0.85;
+}
+
 .host-review-meta {
   display: flex;
   align-items: center;

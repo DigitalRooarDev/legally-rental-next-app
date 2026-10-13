@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import ProfileAvatar from '@/components/users/ProfileAvatar';
 import StarRating from '@/components/my-account/StarRating';
 import { formatMonthYear } from '@/utils/formats';
@@ -16,6 +17,18 @@ const VISIBLE_QUESTIONS = 4;
  * the scale is printed beside it, so "5.00" is three characters of noise.
  */
 const formatScore = (value) => String(Number(value.toFixed(1)));
+
+/**
+ * Where a byline points. `/users/profile/[user_id]` is public and takes any
+ * member id — it is the page reached *from* a review byline, which is this.
+ *
+ * `""` when the payload carried no id, which is what makes the byline plain text
+ * rather than a link to `/users/profile/`.
+ */
+const profileHref = (hostId) => {
+  const id = String(hostId ?? '').trim();
+  return /^\d+$/.test(id) ? `/users/profile/${id}` : '';
+};
 
 /**
  * One host's review of a guest.
@@ -40,13 +53,32 @@ export default function HostReview({ review }) {
   const canExpand = questions.length > VISIBLE_QUESTIONS;
   const visible = isExpanded ? questions : questions.slice(0, VISIBLE_QUESTIONS);
   const date = formatMonthYear(review.date);
+  const href = profileHref(review.hostId);
+
+  const avatar = <ProfileAvatar src={review.hostImage} name={review.hostName} size={48} />;
 
   return (
-    <article className="host-review">
+    <article className="host-review" data-author-id={review.hostId || undefined}>
       <div className="host-review-head">
-        <ProfileAvatar src={review.hostImage} name={review.hostName} size={48} />
+        {href ? (
+          /* The same destination as the name beside it, so it is hidden from
+             assistive tech and skipped by Tab rather than read out twice. */
+          <Link className="host-review-avatar-link" href={href} tabIndex={-1} aria-hidden="true">
+            {avatar}
+          </Link>
+        ) : (
+          avatar
+        )}
         <div className="host-review-author">
-          <p className="host-review-name">{review.hostName}</p>
+          <p className="host-review-name">
+            {href ? (
+              <Link className="host-review-name-link" href={href}>
+                {review.hostName}
+              </Link>
+            ) : (
+              review.hostName
+            )}
+          </p>
           {review.hostLocation ? (
             <p className="host-review-meta">
               <i className="icon icon-map" aria-hidden="true" />
