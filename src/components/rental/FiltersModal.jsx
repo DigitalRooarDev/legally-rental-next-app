@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Slider } from 'antd';
 import DateRangeField from '@/components/theme/DateRangeField';
 import HeroExtraPanel, {
@@ -22,6 +22,8 @@ import { CURRENCY_SYMBOL, HERO_EXTRA_BY_RENTAL_TYPE } from '@/lib/constants';
  */
 const PRICE_CEILING = 10_000_000;
 const PRICE_STEP = 5_000;
+/** How long typing has to pause before an inverted min/max is corrected. */
+const PRICE_CHECK_DELAY = 700;
 
 /** Every param this modal owns. Anything else (map bounds) survives Apply. */
 const OWNED_PARAMS = Object.freeze([
@@ -59,6 +61,14 @@ const toPriceRange = (min, max) => [
   Math.min(Math.max(Number.parseInt(min, 10) || 0, 0), PRICE_CEILING),
   Math.min(Number.parseInt(max, 10) || PRICE_CEILING, PRICE_CEILING),
 ];
+
+const clampPrice = (value) => Math.min(Math.max(Number(value) || 0, 0), PRICE_CEILING);
+
+/** An emptied field means "no bound": 0 for the minimum, the ceiling for the maximum. */
+const parsePrice = (text, fallback) => (String(text).trim() === '' ? fallback : clampPrice(text));
+
+/** Puts the lower value first, so a range typed "backwards" still makes sense. */
+const sortPriceRange = ([a, b]) => (a <= b ? [a, b] : [b, a]);
 
 /**
  * Reads the applied filters out of the URL into the modal's draft shape.
@@ -139,6 +149,32 @@ function FiltersForm({ categories, searchParams, onApply }) {
 
   const [minPrice, maxPrice] = draft.price;
 
+  // What the two inputs show, kept apart from `draft.price` so a field can be
+  // emptied or half-typed without being forced back to a number on every key.
+  const [priceInput, setPriceInput] = useState(() => draft.price.map(String));
+  const lastEditedPrice = useRef('max');
+
+  const setPriceField = (index, text) => {
+    lastEditedPrice.current = index === 0 ? 'min' : 'max';
+    const nextInput = index === 0 ? [text, priceInput[1]] : [priceInput[0], text];
+    setPriceInput(nextInput);
+    set({ price: [parsePrice(nextInput[0], 0), parsePrice(nextInput[1], PRICE_CEILING)] });
+  };
+
+  // Once typing pauses, an inverted range is corrected by moving the field the
+  // user just edited up/down to the other one — never mid-number.
+  useEffect(() => {
+    if (minPrice <= maxPrice) return undefined;
+
+    const timer = setTimeout(() => {
+      const fixed = lastEditedPrice.current === 'max' ? [minPrice, minPrice] : [maxPrice, maxPrice];
+      setPriceInput(fixed.map(String));
+      setDraft((current) => ({ ...current, price: fixed }));
+    }, PRICE_CHECK_DELAY);
+
+    return () => clearTimeout(timer);
+  }, [minPrice, maxPrice]);
+
   const buildParams = (next) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -163,11 +199,14 @@ function FiltersForm({ categories, searchParams, onApply }) {
     if (next.startDate) params.set('startDate', next.startDate);
     if (next.endDate) params.set('endDate', next.endDate);
 
-    const [min, max] = next.price;
-    if (min > 0) params.set('minPrice', String(min));
-    // At the ceiling the user has not chosen an upper bound, they have just left
-    // the handle where it started — sending it would exclude anything dearer.
-    if (max < PRICE_CEILING) params.set('maxPrice', String(max));
+    const [min, max] = sortPriceRange(next.price);
+    // Untouched range -> no price filter at all. Once either end moves, both are
+    // sent: the API only applies the price filter when it gets the pair, so a
+    // lone max goes out with a min of 0 and a lone min with the ceiling as max.
+    if (min > 0 || max < PRICE_CEILING) {
+      params.set('minPrice', String(min));
+      params.set('maxPrice', String(max));
+    }
 
     // Only where the panel offers it — switching to Vehicle must not leave a
     // furnishing status behind, the same rule the attribute params follow.
@@ -297,7 +336,9 @@ function FiltersForm({ categories, searchParams, onApply }) {
           <div className="filters-section-head">
             <h3 className="filters-section-title">Price Range</h3>
             <span className="filters-price-badge">
-              {formatPrice(minPrice)} – {formatPrice(maxPrice)}
+              {/* The slider's full span, not the selection — the inputs below
+                  already show what is picked. */}
+              {formatPrice(0)} – {formatPrice(PRICE_CEILING)}
             </span>
           </div>
 
@@ -307,7 +348,10 @@ function FiltersForm({ categories, searchParams, onApply }) {
             max={PRICE_CEILING}
             step={PRICE_STEP}
             value={draft.price}
-            onChange={(price) => set({ price })}
+            onChange={(price) => {
+              set({ price });
+              setPriceInput(price.map(String));
+            }}
             tooltip={{ formatter: formatPrice }}
             className="filters-price-slider"
           />
@@ -320,16 +364,9 @@ function FiltersForm({ categories, searchParams, onApply }) {
                 min="0"
                 max={PRICE_CEILING}
                 className="form-control"
-                value={minPrice}
-                // Clamped against the other handle so the range can never invert.
-                onChange={(event) =>
-                  set({
-                    price: [
-                      Math.min(Math.max(Number(event.target.value) || 0, 0), maxPrice),
-                      maxPrice,
-                    ],
-                  })
-                }
+                value={priceInput[0]}
+                placeholder="0"
+                onChange={(event) => setPriceField(0, event.target.value)}
               />
             </label>
             <label>
@@ -339,15 +376,9 @@ function FiltersForm({ categories, searchParams, onApply }) {
                 min="0"
                 max={PRICE_CEILING}
                 className="form-control"
-                value={maxPrice}
-                onChange={(event) =>
-                  set({
-                    price: [
-                      minPrice,
-                      Math.min(Math.max(Number(event.target.value) || 0, minPrice), PRICE_CEILING),
-                    ],
-                  })
-                }
+                value={priceInput[1]}
+                placeholder="No limit"
+                onChange={(event) => setPriceField(1, event.target.value)}
               />
             </label>
           </div>
@@ -391,6 +422,7 @@ function FiltersForm({ categories, searchParams, onApply }) {
           className="filter-clear-all"
           onClick={() => {
             setDraft(EMPTY_DRAFT);
+            setPriceInput(EMPTY_DRAFT.price.map(String));
             onApply(buildParams(null));
           }}
         >
