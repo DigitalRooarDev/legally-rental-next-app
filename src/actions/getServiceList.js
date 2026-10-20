@@ -46,6 +46,8 @@ const FILTER_TO_FIELD = Object.freeze({
   transmissionType: 'transmission_type',
   /** `FURNISHED` | `SEMI_FURNISHED` | `UNFURNISHED`, from `rental_type_info`. */
   furnishingStatus: 'furnishing_status',
+  /** `'1'` | `'0'` — Vehicle and Property only. */
+  airCondition: 'air_condition',
   seats: 'seating_capacity',
   year: 'year_of_manufacture',
   /** Equipment and fashion date their stock with `date_of_manufacturing`. */

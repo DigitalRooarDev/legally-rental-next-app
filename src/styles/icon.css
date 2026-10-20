@@ -314,6 +314,9 @@
 .icon-furnished {
   mask-image: url(/images/svg/furnishing.svg);
 }
+.icon-air-conditioning {
+  mask-image: url(/images/svg/air-conditioning.svg);
+}
 .icon-bedroom {
   mask-image: url(/images/svg/bedroom.svg);
 }

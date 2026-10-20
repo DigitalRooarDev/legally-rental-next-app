@@ -100,6 +100,9 @@ export const HERO_EXTRA_BY_RENTAL_TYPE = Object.freeze({
   FASHION: 'fashion',
 });
 
+/** Rental types whose filter offers the Amenities section (Air conditioning). */
+export const AMENITY_RENTAL_TYPES = Object.freeze(['VEHICLE', 'PROPERTY']);
+
 /** Label + placeholder for each third-field variant. */
 export const HERO_EXTRA_LABELS = Object.freeze({
   guests: { label: 'Guests', placeholder: 'Add guests' },

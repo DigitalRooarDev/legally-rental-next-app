@@ -13,7 +13,11 @@ import PlaceSearchField from '@/components/theme/PlaceSearchField';
 import { useRentalOptions } from '@/context/rentalOptionsContext';
 import { usePlaceSuggestions } from '@/hooks/usePlaceSuggestions';
 import { categoryParam, findCategory } from '@/lib/categories';
-import { CURRENCY_SYMBOL, HERO_EXTRA_BY_RENTAL_TYPE } from '@/lib/constants';
+import {
+  AMENITY_RENTAL_TYPES,
+  CURRENCY_SYMBOL,
+  HERO_EXTRA_BY_RENTAL_TYPE,
+} from '@/lib/constants';
 
 /**
  * Upper bound of the price slider. The API has no "dearest listing" endpoint, so
@@ -36,8 +40,12 @@ const OWNED_PARAMS = Object.freeze([
   'minPrice',
   'maxPrice',
   'furnishing',
+  'airCondition',
   ...ALL_EXTRA_PARAM_KEYS,
 ]);
+
+
+console.log(OWNED_PARAMS);
 
 const EMPTY_DRAFT = Object.freeze({
   location: '',
@@ -48,6 +56,7 @@ const EMPTY_DRAFT = Object.freeze({
   endDate: '',
   price: [0, PRICE_CEILING],
   furnishing: '',
+  airCondition: false,
   extra: EMPTY_EXTRA,
 });
 
@@ -93,6 +102,7 @@ const readDraft = (searchParams, categories) => {
     endDate: searchParams.get('endDate') ?? '',
     price: toPriceRange(searchParams.get('minPrice'), searchParams.get('maxPrice')),
     furnishing: searchParams.get('furnishing') ?? '',
+    airCondition: searchParams.get('airCondition') === '1',
     extra: readExtraFromParams(searchParams),
   };
 };
@@ -107,7 +117,7 @@ const readDraft = (searchParams, categories) => {
  */
 export const countActiveFilters = (searchParams) => {
   const has = (key) => Boolean(searchParams.get(key));
-
+  
   return [
     has('city'),
     has('category'),
@@ -115,6 +125,7 @@ export const countActiveFilters = (searchParams) => {
     has('startDate') || has('endDate'),
     has('minPrice') || has('maxPrice'),
     has('furnishing'),
+    has('airCondition'),
     ALL_EXTRA_PARAM_KEYS.some(has),
   ].filter(Boolean).length;
 };
@@ -132,6 +143,7 @@ function FiltersForm({ categories, searchParams, onApply }) {
 
   const set = (patch) => setDraft((current) => ({ ...current, ...patch }));
 
+  
   // The same debounced lookup the hero's Where field uses.
   const {
     suggestions: places,
@@ -146,6 +158,7 @@ function FiltersForm({ categories, searchParams, onApply }) {
 
   const subCategories = draftCategory?.subcategories ?? [];
   const extraVariant = HERO_EXTRA_BY_RENTAL_TYPE[draftCategory?.rentalType] ?? 'guests';
+  const showAmenities = AMENITY_RENTAL_TYPES.includes(draftCategory?.rentalType);
 
   const [minPrice, maxPrice] = draft.price;
 
@@ -212,10 +225,13 @@ function FiltersForm({ categories, searchParams, onApply }) {
     // furnishing status behind, the same rule the attribute params follow.
     if (next.furnishing && extraVariant === 'guests') params.set('furnishing', next.furnishing);
 
+    // Same rule for amenities: Vehicle and Property only. Unchecked writes
+    // nothing — the search page sends the API `0` for it.
+    if (next.airCondition && showAmenities) params.set('airCondition', '1');
+
     Object.entries(extraToParams(extraVariant, next.extra)).forEach(([key, value]) => {
       params.set(key, value);
     });
-
     return params;
   };
 
@@ -402,6 +418,23 @@ function FiltersForm({ categories, searchParams, onApply }) {
                 </option>
               ))}
             </select>
+          </section>
+        ) : null}
+
+        {showAmenities ? (
+          <section className="filters-section filters-amenities">
+            <h3 className="filters-section-title">Amenities</h3>
+            <div className="filters-pills">
+              <button
+                type="button"
+                className={`filters-pill filters-pill--icon ${draft.airCondition ? 'active' : ''}`}
+                aria-pressed={draft.airCondition}
+                onClick={() => set({ airCondition: !draft.airCondition })}
+              >
+                <i className="icon icon-air-conditioning" aria-hidden="true" />
+                Air conditioning
+              </button>
+            </div>
           </section>
         ) : null}
 

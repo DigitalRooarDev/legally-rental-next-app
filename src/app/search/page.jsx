@@ -8,6 +8,7 @@ import PageLinks from '@/components/theme/PageLinks';
 import { getServiceList } from '@/actions/getServiceList';
 import { getCategories } from '@/actions/getCategories';
 import { findCategory } from '@/lib/categories';
+import { AMENITY_RENTAL_TYPES } from '@/lib/constants';
 
 export const metadata = {
   title: 'Search rentals',
@@ -59,7 +60,12 @@ const firstValue = (value) => (Array.isArray(value) ? value[0] : value);
  * beside it filters, and sending a street address to `current_city` would match
  * nothing. It must never be added to `PARAM_TO_FILTER`.
  */
-const CARRIED_PARAMS = ['category', 'address', ...Object.keys(PARAM_TO_FILTER)];
+const CARRIED_PARAMS = [
+  'category',
+  'address',
+  'airCondition',
+  ...Object.keys(PARAM_TO_FILTER),
+];
 
 /**
  * The `<h1>`, composed from whatever is actually applied.
@@ -105,6 +111,12 @@ export default async function SearchPage({ searchParams }) {
   // An unresolvable slug filters nothing rather than being sent as a raw string,
   // which the API would read as an unknown id and answer with zero listings.
   if (activeCategory) filters.categoryId = activeCategory.id;
+
+  // Amenities exist for Vehicle and Property only: there the API always gets
+  // `air_condition` — `1` when ticked, `0` otherwise.
+  if (AMENITY_RENTAL_TYPES.includes(activeCategory?.rentalType)) {
+    filters.airCondition = firstValue(params?.airCondition) === '1' ? '1' : '0';
+  }
 
   const { products, pagination, error } = await getServiceList({ filters, page });
 
