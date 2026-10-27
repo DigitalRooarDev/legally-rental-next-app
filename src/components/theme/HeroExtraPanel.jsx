@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 
 import GuestSelector, { summariseGuests } from '@/components/theme/GuestSelector';
 import { useRentalOptions } from '@/context/rentalOptionsContext';
-import { FUEL_TYPES, TRANSMISSION_TYPES } from '@/lib/constants';
+import { DRIVING_OPTIONS, FUEL_TYPES, TRANSMISSION_TYPES } from '@/lib/constants';
 
 /**
  * The hero's third field changes with the selected category. Every attribute
@@ -14,7 +14,7 @@ import { FUEL_TYPES, TRANSMISSION_TYPES } from '@/lib/constants';
  *
  *   guests     Property / Halls  -> maximum_guests, child_members, adult_members
  *   vehicle    Vehicle           -> fuel_type, transmission_type, seating_capacity,
- *                                   year_of_manufacture
+ *                                   year_of_manufacture, model, driving_options
  *   equipment  Equipment         -> date_of_manufacturing
  *   fashion    Fashion           -> date_of_manufacturing, size
  */
@@ -25,6 +25,8 @@ export const EMPTY_EXTRA = Object.freeze({
   transmissionType: '',
   seats: '',
   year: '',
+  model: '',
+  drivingOptions: '',
   size: '',
 });
 
@@ -37,7 +39,7 @@ export const EMPTY_EXTRA = Object.freeze({
  */
 export const EXTRA_PARAM_KEYS = Object.freeze({
   guests: ['adults', 'children', 'maxGuests'],
-  vehicle: ['fuelType', 'transmissionType', 'seats', 'year'],
+  vehicle: ['fuelType', 'transmissionType', 'seats', 'year', 'model', 'drivingOptions'],
   // Equipment and Fashion both date their stock with `date_of_manufacturing`.
   equipment: ['madeIn'],
   fashion: ['madeIn', 'size'],
@@ -70,6 +72,8 @@ export const extraToParams = (variant, value = EMPTY_EXTRA) => {
             transmissionType: value.transmissionType,
             seats: value.seats,
             year: value.year,
+            model: value.model?.trim(),
+            drivingOptions: value.drivingOptions,
           }
         : variant === 'equipment'
           ? { madeIn: value.year }
@@ -96,6 +100,8 @@ export const readExtraFromParams = (params) => {
     transmissionType: params.get('transmissionType') ?? '',
     seats: params.get('seats') ?? '',
     year: params.get('year') ?? params.get('madeIn') ?? '',
+    model: params.get('model') ?? '',
+    drivingOptions: params.get('drivingOptions') ?? '',
     size: params.get('size') ?? '',
   };
 };
@@ -118,7 +124,14 @@ export const summariseExtra = (variant, value) => {
     TRANSMISSION_TYPES.find((option) => option.value === value.transmissionType)?.label ||
     value.transmissionType;
 
-  return [fuel, transmission, value.seats && `${value.seats} seats`, value.year]
+  return [
+    value.model?.trim(),
+    fuel,
+    transmission,
+    value.seats && `${value.seats} seats`,
+    value.year,
+    value.drivingOptions,
+  ]
     .filter(Boolean)
     .join(' · ');
 };
@@ -272,6 +285,33 @@ export default function HeroExtraPanel({ variant, value, onChange }) {
         </label>
         <YearField value={value.year} onChange={(year) => set({ year })} />
       </div>
+
+      <label className="hero-field">
+        <span>Model</span>
+        <input
+          type="text"
+          className="form-control"
+          placeholder="e.g. Corolla, Camry"
+          value={value.model}
+          onChange={(event) => set({ model: event.target.value })}
+        />
+      </label>
+
+      <label className="hero-field">
+        <span>Driving Options</span>
+        <select
+          className="form-control form-select"
+          value={value.drivingOptions}
+          onChange={(event) => set({ drivingOptions: event.target.value })}
+        >
+          <option value="">Any</option>
+          {DRIVING_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }

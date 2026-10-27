@@ -82,6 +82,13 @@ export const TRANSMISSION_TYPES = Object.freeze([
   { value: 'AUTOMATIC', label: 'Automatic' },
 ]);
 
+/** `driving_options` values — sent to the API exactly as written here. */
+export const DRIVING_OPTIONS = Object.freeze([
+  { value: 'Self-drive', label: 'Self-drive' },
+  { value: 'With Driver', label: 'With Driver' },
+  { value: 'Flexible', label: 'Flexible' },
+]);
+
 export const FURNISHING_STATUSES = Object.freeze([
   { value: 'FURNISHED', label: 'Furnished' },
   { value: 'SEMI_FURNISHED', label: 'Semi Furnished' },

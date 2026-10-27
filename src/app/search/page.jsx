@@ -43,6 +43,8 @@ const PARAM_TO_FILTER = {
   furnishing: 'furnishingStatus',
   seats: 'seats',
   year: 'year',
+  model: 'model',
+  drivingOptions: 'drivingOptions',
   madeIn: 'madeIn',
   size: 'size',
   lat: 'latitude',

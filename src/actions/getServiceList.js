@@ -50,6 +50,9 @@ const FILTER_TO_FIELD = Object.freeze({
   airCondition: 'air_condition',
   seats: 'seating_capacity',
   year: 'year_of_manufacture',
+  model: 'model',
+  /** `Self-drive` | `With Driver` | `Flexible` — Vehicle only. */
+  drivingOptions: 'driving_options',
   /** Equipment and fashion date their stock with `date_of_manufacturing`. */
   madeIn: 'date_of_manufacturing',
   size: 'size',
