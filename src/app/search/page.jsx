@@ -114,6 +114,12 @@ export default async function SearchPage({ searchParams }) {
   // which the API would read as an unknown id and answer with zero listings.
   if (activeCategory) filters.categoryId = activeCategory.id;
 
+  // Nothing writes `?rentalType=`, so the API's `rental_type` comes from the
+  // category itself (VEHICLE, PROPERTY, …) unless the URL set one explicitly.
+  if (!filters.rentalType && activeCategory?.rentalType) {
+    filters.rentalType = activeCategory.rentalType;
+  }
+
   // Amenities exist for Vehicle and Property only: there the API always gets
   // `air_condition` — `1` when ticked, `0` otherwise.
   if (AMENITY_RENTAL_TYPES.includes(activeCategory?.rentalType)) {
