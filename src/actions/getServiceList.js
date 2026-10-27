@@ -81,10 +81,13 @@ const buildBody = (filters, userId, page) => {
 
 const loadServiceList = cache(async (serialisedFilters, userId, token, page) => {
   const filters = JSON.parse(serialisedFilters);
+  const body = buildBody(filters, userId, page);
+
+  console.log('categoryServiceList payload', body);
 
   const data = await fetchAPI('categoryServiceList', {
     method: 'POST',
-    body: buildBody(filters, userId, page),
+    body,
     token,
   });
 
