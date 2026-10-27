@@ -39,9 +39,12 @@ import { ORDER_STATUS_LABELS, ORDER_STATUS_TONES } from "@/lib/constants";
  *
  * @param {object} details `service.rental_details`
  * @param {string} rentalType
+ * @param {object} [options]
+ * @param {boolean} [options.detailed=false] Adds a vehicle's model and driving
+ *   options — detail page only; the listing card stays at three specs.
  * @returns {ListingHighlight[]} Empty when the listing has none.
  */
-const toHighlights = (details, rentalType) => {
+const toHighlights = (details, rentalType, { detailed = false } = {}) => {
   if (!details || typeof details !== "object") return [];
 
   const count = (value, singular, icon, plural = `${singular}s`) => {
@@ -52,6 +55,8 @@ const toHighlights = (details, rentalType) => {
 
   if (rentalType === "VEHICLE") {
     const vehicle = details.vehicle ?? {};
+    const model = detailed ? attributeText(vehicle.model) : "";
+    const drivingOptions = detailed ? attributeText(vehicle.driving_options) : "";
 
     return [
       // `fuel_type`/`transmission_type` are `{key, value}` objects, and `{}` when
@@ -61,6 +66,8 @@ const toHighlights = (details, rentalType) => {
         ? { label: vehicle.transmission_type.value, icon: "icon-transmission-type" }
         : null,
       count(vehicle.seating_capacity, "seat", "icon-seat"),
+      model ? { label: model, icon: "icon-brand-model" } : null,
+      drivingOptions ? { label: drivingOptions, icon: "icon-account" } : null,
     ].filter(Boolean);
   }
 
@@ -343,6 +350,12 @@ const SPEC_ROWS = Object.freeze({
       label: "Transmission Type",
       icon: "icon-transmission",
       read: (block) => attributeText(block.transmission_type),
+    },
+    {
+      key: "driving_options",
+      label: "Driving Options",
+      icon: "icon-account",
+      read: (block) => attributeText(block.driving_options),
     },
     {
       key: "pickup_time",
@@ -906,9 +919,9 @@ export const toServiceDetailViewModel = (response) => {
     isFavorite: Boolean(service.is_favorite),
     bookingOptions: service.rental_details?.booking_options || "",
     cancellationPolicy: service.rental_details?.cancellation_policies || "",
-    // The same at-a-glance row the cards show, from the same source — the detail
-    // page must not disagree with the card the visitor clicked to reach it.
-    highlights: toHighlights(service.rental_details, rentalType),
+    // The card's at-a-glance row, from the same source so the two cannot
+    // disagree — plus model and driving options, which only the detail page shows.
+    highlights: toHighlights(service.rental_details, rentalType, { detailed: true }),
     unavailableDates: toUnavailableDates(service),
     booking: toBookingRules(service.rental_details, rentalType),
     attributes: toAttributeRows(service.rental_details, rentalType),
